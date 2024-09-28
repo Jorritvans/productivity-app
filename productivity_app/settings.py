@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'corsheaders',     # CORS headers
     'cloudinary',      # Cloudinary
     'cloudinary_storage',  # Cloudinary storage
-    'tasks',           # Our custom tasks app
+    'tasks',          # Our custom tasks app
 ]
 
 MIDDLEWARE = [

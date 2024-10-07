@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -38,15 +39,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',
-    'rest_framework',  # Django REST framework
-    'corsheaders',     # CORS headers
-    'cloudinary',      # Cloudinary
-    'cloudinary_storage',  # Cloudinary storage
-    'tasks',          # Our custom tasks app
+    'rest_framework',
+    'corsheaders',  # Added for CORS handling
+    'cloudinary',  # Cloudinary for media storage
+    'cloudinary_storage',
+    'tasks',  # Custom tasks app
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # CORS Middleware
+    'corsheaders.middleware.CorsMiddleware',  # CORS middleware should come first
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -76,10 +77,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'productivity_app.wsgi.application'
 
-
 # Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -87,10 +85,7 @@ DATABASES = {
     }
 }
 
-
 # Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -106,10 +101,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -118,17 +110,13 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
 STATIC_URL = 'static/'
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Cloudinary storage configuration
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': 'your_cloud_name',
     'API_KEY': 'your_api_key',
@@ -136,13 +124,24 @@ CLOUDINARY_STORAGE = {
 }
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
+# Django REST framework with JWT authentication
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
 
+# CORS configuration
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',  # React front-end
+    'http://localhost:3000',  # Localhost for local development
+    'https://8080-<your-gitpod-id>.ws-eu.gitpod.io',  # Gitpod React app URL
 ]
 
+# CSRF trusted origins
+CSRF_TRUSTED_ORIGINS = [
+    'https://8000-jorritvans-productivity-my39hyagwgi.ws-eu116.gitpod.io',
+    'https://8080-jorritvans-productivity-my39hyagwgi.ws-eu116.gitpod.io',
+    'https://8081-jorritvans-productivity-my39hyagwgi.ws-eu116.gitpod.io'
+]
+
+CSRF_COOKIE_SECURE = True  # Enable if you're testing in a secure environment

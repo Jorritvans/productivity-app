@@ -1,15 +1,11 @@
-// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Login from './components/Login';
-import TaskList from './components/TaskList';
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Navbar, Nav, Container } from 'react-bootstrap';
+
 import PrivateRoute from './components/PrivateRoute';
 import Login from './components/Login';
-import Register from './components/Register'; // Import Register component
+import Register from './components/Register';
 import TaskList from './components/TaskList';
-import { Navbar, Nav, Container } from 'react-bootstrap';
 
 function App() {
   const handleLogout = () => {

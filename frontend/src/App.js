@@ -15,7 +15,6 @@ function App() {
 
   return (
     <Router>
-      {/* Navbar */}
       <Navbar bg="dark" variant="dark" expand="lg">
         <Container>
           <Navbar.Brand href="/">ProductivityApp</Navbar.Brand>
@@ -38,10 +37,9 @@ function App() {
         </Container>
       </Navbar>
 
-      {/* Routes */}
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} /> {/* Registration Route */}
+        <Route path="/register" element={<Register />} />
         <Route
           path="/tasks"
           element={

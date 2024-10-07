@@ -3,7 +3,12 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './components/Login';
 import TaskList from './components/TaskList';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
+import Login from './components/Login';
+import Register from './components/Register'; // Import Register component
+import TaskList from './components/TaskList';
 import { Navbar, Nav, Container } from 'react-bootstrap';
 
 function App() {
@@ -21,8 +26,17 @@ function App() {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ml-auto">
-              <Nav.Link href="/tasks">Tasks</Nav.Link>
-              <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
+              {localStorage.getItem('token') ? (
+                <>
+                  <Nav.Link href="/tasks">Tasks</Nav.Link>
+                  <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
+                </>
+              ) : (
+                <>
+                  <Nav.Link href="/login">Login</Nav.Link>
+                  <Nav.Link href="/register">Register</Nav.Link>
+                </>
+              )}
             </Nav>
           </Navbar.Collapse>
         </Container>
@@ -31,6 +45,7 @@ function App() {
       {/* Routes */}
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} /> {/* Registration Route */}
         <Route
           path="/tasks"
           element={

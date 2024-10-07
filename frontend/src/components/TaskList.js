@@ -1,67 +1,69 @@
-import React, { useEffect, useState } from 'react';
-import api from '../api';  // Import the Axios instance
-import InfiniteScroll from 'react-infinite-scroll-component';  // Import infinite scroll package
-import { Container, Button, Modal, Form } from 'react-bootstrap';  // Import Bootstrap components
+// src/components/TaskList.js
+import React, { useState, useEffect } from 'react';
+import api from '../api';
+import InfiniteScroll from 'react-infinite-scroll-component';
+import { Container, Button, Modal, Form } from 'react-bootstrap';
 
 const TaskList = () => {
-  const [tasks, setTasks] = useState([]);  // Store tasks
-  const [page, setPage] = useState(1);  // Page for infinite scrolling
-  const [hasMore, setHasMore] = useState(true);  // To check if there are more tasks to load
-  const [filter, setFilter] = useState({ category: '', priority: '' });  // Store filter settings
-  const [search, setSearch] = useState('');  // Store search keyword
-  const [showModal, setShowModal] = useState(false);  // Control modal visibility for adding tasks
-  const [newTask, setNewTask] = useState({ title: '', description: '', due_date: '', priority: '' });  // New task details
+  const [tasks, setTasks] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [filter, setFilter] = useState({ category: '', priority: '' });
+  const [search, setSearch] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    due_date: '',
+    priority: '',
+    category: '',
+  });
 
-  // Fetch tasks from the API with pagination and filters
   const fetchTasks = async () => {
     try {
-      const response = await api.get('tasks/', { params: { page, search, ...filter } });
+      const response = await api.get('tasks/', {
+        params: { page, search, ...filter },
+      });
       setTasks((prevTasks) => [...prevTasks, ...response.data.results]);
-      setPage(page + 1);  // Increment page for infinite scrolling
+      setPage(page + 1);
       if (!response.data.next) {
-        setHasMore(false);  // No more tasks to load
+        setHasMore(false);
       }
     } catch (error) {
       console.error('Error fetching tasks:', error);
     }
   };
 
-  // Initial fetch and when filters/search changes
   useEffect(() => {
-    setTasks([]);  // Reset task list
-    setPage(1);  // Reset page
-    setHasMore(true);  // Reset infinite scroll
-    fetchTasks();  // Fetch tasks
+    setTasks([]);
+    setPage(1);
+    setHasMore(true);
+    fetchTasks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, search]);
 
-  // Handle form input changes for creating new tasks
   const handleChange = (e) => {
     setNewTask({ ...newTask, [e.target.name]: e.target.value });
   };
 
-  // Submit new task to the API
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await api.post('tasks/', newTask);
-      setTasks([response.data, ...tasks]);  // Add new task to the list
-      handleClose();  // Close the modal
+      setTasks([response.data, ...tasks]);
+      handleClose();
     } catch (error) {
       console.error('Error creating task:', error);
     }
   };
 
-  // Handle modal opening
   const handleShow = () => setShowModal(true);
-
-  // Handle modal closing
   const handleClose = () => setShowModal(false);
 
-  // Task deletion
   const handleDelete = async (id) => {
     try {
       await api.delete(`tasks/${id}/`);
-      setTasks(tasks.filter(task => task.id !== id));  // Remove deleted task from list
+      setTasks(tasks.filter((task) => task.id !== id));
     } catch (error) {
       console.error('Error deleting task:', error);
     }
@@ -70,16 +72,27 @@ const TaskList = () => {
   return (
     <Container className="mt-4">
       <h2>Task List</h2>
-      <Button variant="primary" onClick={handleShow} className="mb-3">Add Task</Button>
+      <Button variant="primary" onClick={handleShow} className="mb-3">
+        Add Task
+      </Button>
 
-      {/* Filter options for category and priority */}
+      {/* Filters */}
       <div className="filters mb-3">
-        <select onChange={(e) => setFilter({ ...filter, category: e.target.value })} className="mr-2">
+        <select
+          onChange={(e) =>
+            setFilter({ ...filter, category: e.target.value })
+          }
+          className="mr-2"
+        >
           <option value="">All Categories</option>
           <option value="Work">Work</option>
           <option value="Personal">Personal</option>
         </select>
-        <select onChange={(e) => setFilter({ ...filter, priority: e.target.value })}>
+        <select
+          onChange={(e) =>
+            setFilter({ ...filter, priority: e.target.value })
+          }
+        >
           <option value="">All Priorities</option>
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
@@ -87,7 +100,7 @@ const TaskList = () => {
         </select>
       </div>
 
-      {/* Search field */}
+      {/* Search */}
       <input
         type="text"
         placeholder="Search tasks"
@@ -95,19 +108,24 @@ const TaskList = () => {
         className="mb-3"
       />
 
-      {/* Infinite Scroll Component */}
+      {/* Infinite Scroll */}
       <InfiniteScroll
         dataLength={tasks.length}
-        next={fetchTasks}  // Fetch next page of tasks
+        next={fetchTasks}
         hasMore={hasMore}
         loader={<h4>Loading...</h4>}
         endMessage={<p>No more tasks</p>}
       >
         <ul>
-          {tasks.map(task => (
+          {tasks.map((task) => (
             <li key={task.id}>
-              {task.title} - {task.due_date} - {task.priority} - {task.category}
-              <Button variant="danger" className="ml-3" onClick={() => handleDelete(task.id)}>
+              {task.title} - {task.due_date} - {task.priority} -{' '}
+              {task.category}
+              <Button
+                variant="danger"
+                className="ml-3"
+                onClick={() => handleDelete(task.id)}
+              >
                 Delete
               </Button>
             </li>
@@ -115,7 +133,7 @@ const TaskList = () => {
         </ul>
       </InfiniteScroll>
 
-      {/* Modal for Adding a New Task */}
+      {/* Modal for Adding Task */}
       <Modal show={showModal} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>Add New Task</Modal.Title>

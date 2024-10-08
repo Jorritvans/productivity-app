@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../api';
+import api from '../api'; // Importing the Axios instance
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button } from 'react-bootstrap';
 
@@ -12,13 +12,28 @@ const Register = () => {
   // Handle form submission for registration
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Registration data:', { username, password, email }); // Debugging
+
     try {
-      await api.post('accounts/register/', { username, password, email });
+      // POST request to the backend's registration endpoint
+      await api.post('/accounts/register/', { username, password, email });
       alert('Registration successful. Please log in.');
       navigate('/login');
     } catch (error) {
       console.error('Registration failed:', error);
-      alert('Registration failed. Try again.');
+      if (error.response) {
+        // Server responded with a status other than 2xx
+        console.log('Error response:', error.response.data);
+        alert(`Registration failed: ${JSON.stringify(error.response.data)}`);
+      } else if (error.request) {
+        // Request was made but no response received
+        console.log('Error request:', error.request);
+        alert('Registration failed: No response from server.');
+      } else {
+        // Something else happened
+        console.log('Error message:', error.message);
+        alert(`Registration failed: ${error.message}`);
+      }
     }
   };
 
@@ -30,7 +45,9 @@ const Register = () => {
           <Form.Label>Username</Form.Label>
           <Form.Control
             type="text"
+            name="username"
             placeholder="Enter username"
+            value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
           />
@@ -40,7 +57,9 @@ const Register = () => {
           <Form.Label>Email</Form.Label>
           <Form.Control
             type="email"
+            name="email"
             placeholder="Enter email"
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </Form.Group>
@@ -49,7 +68,9 @@ const Register = () => {
           <Form.Label>Password</Form.Label>
           <Form.Control
             type="password"
+            name="password"
             placeholder="Enter password"
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />

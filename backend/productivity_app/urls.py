@@ -16,10 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/accounts/', include('accounts.urls')),  # Include accounts URLs
-    path('', include('tasks.urls')),  # Existing tasks URLs
+    path('api/accounts/', include('accounts.urls')),  # API for accounts
+    path('api/tasks/', include('tasks.urls')),  # API for tasks
+    path('', TemplateView.as_view(template_name='index.html')),  # Serve React frontend
 ]
 

@@ -1,15 +1,24 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Navbar, Nav, Container } from 'react-bootstrap';
 
-import PrivateRoute from './components/PrivateRoute';
 import Login from './components/Login';
 import Register from './components/Register';
 import TaskList from './components/TaskList';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
+    setIsAuthenticated(false);
     window.location.href = '/login';
   };
 
@@ -21,7 +30,7 @@ function App() {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ml-auto">
-              {localStorage.getItem('token') ? (
+              {isAuthenticated ? (
                 <>
                   <Nav.Link href="/tasks">Tasks</Nav.Link>
                   <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
@@ -42,13 +51,9 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route
           path="/tasks"
-          element={
-            <PrivateRoute>
-              <TaskList />
-            </PrivateRoute>
-          }
+          element={isAuthenticated ? <TaskList /> : <Navigate to="/login" />}
         />
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={isAuthenticated ? <Navigate to="/tasks" /> : <Login />} />
       </Routes>
     </Router>
   );

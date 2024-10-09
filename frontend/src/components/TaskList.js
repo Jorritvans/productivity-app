@@ -1,4 +1,3 @@
-// src/components/TaskList.js
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import InfiniteScroll from 'react-infinite-scroll-component';
@@ -19,18 +18,50 @@ const TaskList = () => {
     category: '',
   });
 
+  // Helper function to get the token
+  const getToken = () => {
+    return localStorage.getItem('token');
+  };
+
+  // Fetch tasks from the backend API
   const fetchTasks = async () => {
     try {
-      const response = await api.get('tasks/', {
-        params: { page, search, ...filter },
-      });
-      setTasks((prevTasks) => [...prevTasks, ...response.data.results]);
-      setPage(page + 1);
-      if (!response.data.next) {
-        setHasMore(false);
+      const token = getToken();
+      if (!token) {
+        console.error('No token found in localStorage. Redirecting to login...');
+        alert('You are not logged in. Please login first.');
+        window.location.href = '/login';
+        return;
+      }
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: {
+          page,
+          search,
+          ...filter,
+        },
+      };
+
+      const response = await api.get('tasks/', config);
+
+      if (response.status === 200 && Array.isArray(response.data.results)) {
+        setTasks((prevTasks) => [...prevTasks, ...response.data.results]);
+        setPage(page + 1);
+        if (!response.data.next) {
+          setHasMore(false);
+        }
+      } else {
+        console.error('Unexpected response structure:', response.data);
       }
     } catch (error) {
-      console.error('Error fetching tasks:', error);
+      console.error('Error fetching tasks:', error.response || error.message);
+      if (error.response && error.response.status === 401) {
+        alert('Authorization failed. Please log in again.');
+        window.location.href = '/login';
+      }
     }
   };
 
@@ -49,16 +80,34 @@ const TaskList = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post('tasks/', newTask);
+      const token = getToken();
+
+      if (!token) {
+        alert('Please login before adding a task.');
+        return;
+      }
+
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const response = await api.post('tasks/', newTask, config);
       setTasks([response.data, ...tasks]);
       handleClose();
     } catch (error) {
-      console.error('Error creating task:', error);
+      console.error('Error creating task:', error.response || error.message);
+      if (error.response && error.response.status === 401) {
+        alert('Authorization failed. Please log in again.');
+        window.location.href = '/login';
+      }
     }
   };
 
   const handleShow = () => setShowModal(true);
-  const handleClose = () => setShowModal(false);
+  const handleClose = () => setShowModal(false); // <-- This was missing
 
   const handleDelete = async (id) => {
     try {
@@ -79,9 +128,7 @@ const TaskList = () => {
       {/* Filters */}
       <div className="filters mb-3">
         <select
-          onChange={(e) =>
-            setFilter({ ...filter, category: e.target.value })
-          }
+          onChange={(e) => setFilter({ ...filter, category: e.target.value })}
           className="mr-2"
         >
           <option value="">All Categories</option>
@@ -89,9 +136,7 @@ const TaskList = () => {
           <option value="Personal">Personal</option>
         </select>
         <select
-          onChange={(e) =>
-            setFilter({ ...filter, priority: e.target.value })
-          }
+          onChange={(e) => setFilter({ ...filter, priority: e.target.value })}
         >
           <option value="">All Priorities</option>
           <option value="Low">Low</option>
@@ -119,8 +164,7 @@ const TaskList = () => {
         <ul>
           {tasks.map((task) => (
             <li key={task.id}>
-              {task.title} - {task.due_date} - {task.priority} -{' '}
-              {task.category}
+              {task.title} - {task.due_date} - {task.priority} - {task.category}
               <Button
                 variant="danger"
                 className="ml-3"

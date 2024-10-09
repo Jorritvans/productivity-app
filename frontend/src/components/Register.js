@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../api'; // Importing the Axios instance
+import api from '../api';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button } from 'react-bootstrap';
 
@@ -9,29 +9,19 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const navigate = useNavigate();
 
-  // Handle form submission for registration
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Registration data:', { username, password, email }); // Debugging
 
     try {
-      // POST request to the backend's registration endpoint
       await api.post('/accounts/register/', { username, password, email });
       alert('Registration successful. Please log in.');
       navigate('/login');
     } catch (error) {
-      console.error('Registration failed:', error);
       if (error.response) {
-        // Server responded with a status other than 2xx
-        console.log('Error response:', error.response.data);
-        alert(`Registration failed: ${JSON.stringify(error.response.data)}`);
+        alert(`Registration failed: ${error.response.data.error}`);
       } else if (error.request) {
-        // Request was made but no response received
-        console.log('Error request:', error.request);
         alert('Registration failed: No response from server.');
       } else {
-        // Something else happened
-        console.log('Error message:', error.message);
         alert(`Registration failed: ${error.message}`);
       }
     }

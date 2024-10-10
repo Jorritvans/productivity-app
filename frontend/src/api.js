@@ -1,18 +1,25 @@
 import axios from 'axios';
 
+// Create an Axios instance
 const api = axios.create({
-  baseURL: 'https://8000-jorritvans-productivity-my39hyagwgi.ws-eu116.gitpod.io/api',
+  baseURL: '/api/',  // Relative path since frontend and backend are served from the same domain
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
+// Interceptor to add the Authorization header
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
 export default api;

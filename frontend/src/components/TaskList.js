@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { Container, Button, Modal, Form } from 'react-bootstrap';
+import { Container, Button, Modal, Form, Badge } from 'react-bootstrap';
 
 const TaskList = () => {
   const [tasks, setTasks] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [filter, setFilter] = useState({ category: '', priority: '' });
+  const [filter, setFilter] = useState({ category: '', priority: '', state: '' });
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [newTask, setNewTask] = useState({
@@ -16,36 +16,37 @@ const TaskList = () => {
     due_date: '',
     priority: '',
     category: '',
+    state: 'Open',
   });
+  const [editTask, setEditTask] = useState(null);
+  const [users, setUsers] = useState([]); // For assigning owners
 
-  // Helper function to get the token
-  const getToken = () => {
-    return localStorage.getItem('token');
+  // Fetch users to assign to tasks
+  const fetchUsers = async () => {
+    try {
+      const response = await api.get('/accounts/users/');
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
   };
 
-  // Fetch tasks from the backend API
+  useEffect(() => {
+    fetchUsers();
+    fetchTasks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, search]);
+
   const fetchTasks = async () => {
     try {
-      const token = getToken();
-      if (!token) {
-        console.error('No token found in localStorage. Redirecting to login...');
-        alert('You are not logged in. Please login first.');
-        window.location.href = '/login';
-        return;
-      }
-
       const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         params: {
           page,
           search,
           ...filter,
         },
       };
-
-      const response = await api.get('tasks/', config);
+      const response = await api.get('/tasks/tasks/', config);
 
       if (response.status === 200 && Array.isArray(response.data.results)) {
         setTasks((prevTasks) => [...prevTasks, ...response.data.results]);
@@ -65,38 +66,29 @@ const TaskList = () => {
     }
   };
 
-  useEffect(() => {
-    setTasks([]);
-    setPage(1);
-    setHasMore(true);
-    fetchTasks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, search]);
-
   const handleChange = (e) => {
     setNewTask({ ...newTask, [e.target.name]: e.target.value });
+  };
+
+  const handleEditChange = (e) => {
+    setEditTask({ ...editTask, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = getToken();
-
-      if (!token) {
-        alert('Please login before adding a task.');
-        return;
-      }
-
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      const response = await api.post('tasks/', newTask, config);
+      const taskData = { ...newTask };
+      const response = await api.post('/tasks/tasks/', taskData);
       setTasks([response.data, ...tasks]);
       handleClose();
+      setNewTask({
+        title: '',
+        description: '',
+        due_date: '',
+        priority: '',
+        category: '',
+        state: 'Open',
+      });
     } catch (error) {
       console.error('Error creating task:', error.response || error.message);
       if (error.response && error.response.status === 401) {
@@ -106,15 +98,40 @@ const TaskList = () => {
     }
   };
 
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.put(`/tasks/tasks/${editTask.id}/`, editTask);
+      setTasks(tasks.map((task) => (task.id === editTask.id ? response.data : task)));
+      handleEditClose();
+      setEditTask(null);
+    } catch (error) {
+      console.error('Error updating task:', error.response || error.message);
+      if (error.response && error.response.status === 401) {
+        alert('Authorization failed. Please log in again.');
+        window.location.href = '/login';
+      }
+    }
+  };
+
   const handleShow = () => setShowModal(true);
-  const handleClose = () => setShowModal(false); // <-- This was missing
+  const handleClose = () => setShowModal(false);
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const handleEditShow = (task) => {
+    setEditTask(task);
+    setShowEditModal(true);
+  };
+  const handleEditClose = () => setShowEditModal(false);
 
   const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
     try {
-      await api.delete(`tasks/${id}/`);
+      await api.delete(`/tasks/tasks/${id}/`);
       setTasks(tasks.filter((task) => task.id !== id));
     } catch (error) {
       console.error('Error deleting task:', error);
+      alert('Failed to delete task.');
     }
   };
 
@@ -126,27 +143,41 @@ const TaskList = () => {
       </Button>
 
       {/* Filters */}
-      <div className="filters mb-3">
-        <select
+      <div className="filters mb-3 d-flex flex-wrap">
+        <Form.Select
           onChange={(e) => setFilter({ ...filter, category: e.target.value })}
-          className="mr-2"
+          className="me-2 mb-2"
+          aria-label="Filter by Category"
         >
           <option value="">All Categories</option>
           <option value="Work">Work</option>
           <option value="Personal">Personal</option>
-        </select>
-        <select
+          {/* Add more categories as needed */}
+        </Form.Select>
+        <Form.Select
           onChange={(e) => setFilter({ ...filter, priority: e.target.value })}
+          className="me-2 mb-2"
+          aria-label="Filter by Priority"
         >
           <option value="">All Priorities</option>
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
           <option value="High">High</option>
-        </select>
+        </Form.Select>
+        <Form.Select
+          onChange={(e) => setFilter({ ...filter, state: e.target.value })}
+          className="me-2 mb-2"
+          aria-label="Filter by State"
+        >
+          <option value="">All States</option>
+          <option value="Open">Open</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Done">Done</option>
+        </Form.Select>
       </div>
 
       {/* Search */}
-      <input
+      <Form.Control
         type="text"
         placeholder="Search tasks"
         onChange={(e) => setSearch(e.target.value)}
@@ -161,17 +192,35 @@ const TaskList = () => {
         loader={<h4>Loading...</h4>}
         endMessage={<p>No more tasks</p>}
       >
-        <ul>
+        <ul className="list-group">
           {tasks.map((task) => (
-            <li key={task.id}>
-              {task.title} - {task.due_date} - {task.priority} - {task.category}
-              <Button
-                variant="danger"
-                className="ml-3"
-                onClick={() => handleDelete(task.id)}
-              >
-                Delete
-              </Button>
+            <li key={task.id} className="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <h5>{task.title}</h5>
+                <p>
+                  Due: {task.due_date} | Priority:{' '}
+                  <Badge
+                    bg={
+                      task.priority === 'High'
+                        ? 'danger'
+                        : task.priority === 'Medium'
+                        ? 'warning'
+                        : 'success'
+                    }
+                  >
+                    {task.priority}
+                  </Badge>{' '}
+                  | Category: {task.category} | State: {task.state}
+                </p>
+              </div>
+              <div>
+                <Button variant="secondary" size="sm" onClick={() => handleEditShow(task)} className="me-2">
+                  Edit
+                </Button>
+                <Button variant="danger" size="sm" onClick={() => handleDelete(task.id)}>
+                  Delete
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
@@ -221,8 +270,7 @@ const TaskList = () => {
 
             <Form.Group controlId="formTaskPriority" className="mt-2">
               <Form.Label>Priority</Form.Label>
-              <Form.Control
-                as="select"
+              <Form.Select
                 name="priority"
                 value={newTask.priority}
                 onChange={handleChange}
@@ -232,7 +280,7 @@ const TaskList = () => {
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
                 <option value="High">High</option>
-              </Form.Control>
+              </Form.Select>
             </Form.Group>
 
             <Form.Group controlId="formTaskCategory" className="mt-2">
@@ -246,11 +294,116 @@ const TaskList = () => {
               />
             </Form.Group>
 
+            <Form.Group controlId="formTaskState" className="mt-2">
+              <Form.Label>State</Form.Label>
+              <Form.Select
+                name="state"
+                value={newTask.state}
+                onChange={handleChange}
+                required
+              >
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+              </Form.Select>
+            </Form.Group>
+
             <Button variant="primary" type="submit" className="mt-3">
               Add Task
             </Button>
           </Form>
         </Modal.Body>
+      </Modal>
+
+      {/* Modal for Editing Task */}
+      <Modal show={showEditModal} onHide={handleEditClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Task</Modal.Title>
+        </Modal.Header>
+        {editTask && (
+          <Modal.Body>
+            <Form onSubmit={handleUpdate}>
+              <Form.Group controlId="formEditTaskTitle">
+                <Form.Label>Title</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="title"
+                  placeholder="Enter task title"
+                  value={editTask.title}
+                  onChange={handleEditChange}
+                  required
+                />
+              </Form.Group>
+
+              <Form.Group controlId="formEditTaskDescription" className="mt-2">
+                <Form.Label>Description</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  name="description"
+                  placeholder="Enter task description"
+                  value={editTask.description}
+                  onChange={handleEditChange}
+                />
+              </Form.Group>
+
+              <Form.Group controlId="formEditTaskDueDate" className="mt-2">
+                <Form.Label>Due Date</Form.Label>
+                <Form.Control
+                  type="date"
+                  name="due_date"
+                  value={editTask.due_date}
+                  onChange={handleEditChange}
+                  required
+                />
+              </Form.Group>
+
+              <Form.Group controlId="formEditTaskPriority" className="mt-2">
+                <Form.Label>Priority</Form.Label>
+                <Form.Select
+                  name="priority"
+                  value={editTask.priority}
+                  onChange={handleEditChange}
+                  required
+                >
+                  <option value="">Select Priority</option>
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </Form.Select>
+              </Form.Group>
+
+              <Form.Group controlId="formEditTaskCategory" className="mt-2">
+                <Form.Label>Category</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="category"
+                  placeholder="Enter task category"
+                  value={editTask.category}
+                  onChange={handleEditChange}
+                />
+              </Form.Group>
+
+              <Form.Group controlId="formEditTaskState" className="mt-2">
+                <Form.Label>State</Form.Label>
+                <Form.Select
+                  name="state"
+                  value={editTask.state}
+                  onChange={handleEditChange}
+                  required
+                >
+                  <option value="Open">Open</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Done">Done</option>
+                </Form.Select>
+              </Form.Group>
+
+              <Button variant="primary" type="submit" className="mt-3">
+                Update Task
+              </Button>
+            </Form>
+          </Modal.Body>
+        )}
       </Modal>
     </Container>
   );

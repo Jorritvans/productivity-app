@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Navbar, Nav, Container } from 'react-bootstrap';
 
@@ -7,18 +8,11 @@ import Register from './components/Register';
 import TaskList from './components/TaskList';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsAuthenticated(true);
-    }
-  }, []);
+  const isAuthenticated = localStorage.getItem('access_token');
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsAuthenticated(false);
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     window.location.href = '/login';
   };
 
@@ -29,7 +23,7 @@ function App() {
           <Navbar.Brand href="/">ProductivityApp</Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="ml-auto">
+            <Nav className="ms-auto">
               {isAuthenticated ? (
                 <>
                   <Nav.Link href="/tasks">Tasks</Nav.Link>
@@ -47,13 +41,15 @@ function App() {
       </Navbar>
 
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/tasks" /> : <Login />} />
+        <Route path="/register" element={isAuthenticated ? <Navigate to="/tasks" /> : <Register />} />
         <Route
           path="/tasks"
           element={isAuthenticated ? <TaskList /> : <Navigate to="/login" />}
         />
-        <Route path="/" element={isAuthenticated ? <Navigate to="/tasks" /> : <Login />} />
+        <Route path="/" element={isAuthenticated ? <Navigate to="/tasks" /> : <Navigate to="/login" />} />
+        {/* Catch-all route for undefined paths */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
   );

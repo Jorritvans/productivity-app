@@ -1,28 +1,36 @@
 import React, { useState } from 'react';
 import api from '../api';
 import { useNavigate } from 'react-router-dom';
-import { Container, Form, Button } from 'react-bootstrap';
+import { Container, Form, Button, Alert } from 'react-bootstrap';
 
 const Register = () => {
   const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
 
     try {
-      await api.post('/accounts/register/', { username, password, email });
-      alert('Registration successful. Please log in.');
-      navigate('/login');
+      const res = await api.post('/accounts/register/', { username, email, password });
+      setSuccess('Registration successful. You can now log in.');
+      setUsername('');
+      setEmail('');
+      setPassword('');
+      // Optionally, redirect to login after a delay
+      setTimeout(() => navigate('/login'), 2000);
     } catch (error) {
       if (error.response) {
-        alert(`Registration failed: ${error.response.data.error}`);
+        setError(error.response.data.error || 'Registration failed.');
       } else if (error.request) {
-        alert('Registration failed: No response from server.');
+        setError('No response from server.');
       } else {
-        alert(`Registration failed: ${error.message}`);
+        setError('Registration failed.');
       }
     }
   };
@@ -30,6 +38,8 @@ const Register = () => {
   return (
     <Container className="mt-4">
       <h2>Register</h2>
+      {error && <Alert variant="danger">{error}</Alert>}
+      {success && <Alert variant="success">{success}</Alert>}
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="formUsername">
           <Form.Label>Username</Form.Label>
@@ -51,6 +61,7 @@ const Register = () => {
             placeholder="Enter email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
         </Form.Group>
 

@@ -1,14 +1,14 @@
 import axios from 'axios';
 
-// Create an Axios instance
+// Create an Axios instance with the baseURL from environment variables
 const api = axios.create({
-  baseURL: '/api/',  // Relative path since frontend and backend are served from the same domain
+  baseURL: process.env.REACT_APP_API_BASE_URL, // Uses the environment variable
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor to add the Authorization header
+// Interceptor to add the Authorization header to every request if a token exists
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');

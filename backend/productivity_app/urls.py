@@ -25,6 +25,6 @@ urlpatterns = [
     path('api/tasks/', include('tasks.urls')),        # API for tasks
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    # Catch-all route to serve React's index.html
+    # Catch-all route to serve React's index.html for client-side routing
     re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
 ]

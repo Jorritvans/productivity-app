@@ -13,24 +13,34 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError(''); // Clear any previous errors
+    setSuccess(''); // Clear any previous success messages
 
     try {
-      const res = await api.post('/accounts/register/', { username, email, password });
+      const response = await api.post('/accounts/register/', { username, email, password });
       setSuccess('Registration successful. You can now log in.');
       setUsername('');
       setEmail('');
       setPassword('');
-      // Optionally, redirect to login after a delay
+
+      // Optionally redirect to login after a delay
       setTimeout(() => navigate('/login'), 2000);
     } catch (error) {
-      if (error.response) {
-        setError(error.response.data.error || 'Registration failed.');
+      if (error.response && error.response.data) {
+        // If the backend returned validation errors, display them
+        const backendError = error.response.data;
+        if (backendError.error) {
+          setError(backendError.error);
+        } else if (backendError.password) {
+          setError(backendError.password.join(' ')); // Password validation error
+        } else {
+          setError('Registration failed. Please check your inputs.');
+        }
       } else if (error.request) {
-        setError('No response from server.');
+        // No response from the server
+        setError('No response from server. Please try again later.');
       } else {
-        setError('Registration failed.');
+        setError('Registration failed. Please try again.');
       }
     }
   };

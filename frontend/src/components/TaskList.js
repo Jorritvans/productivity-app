@@ -19,13 +19,14 @@ const TaskList = () => {
     state: 'Open',
   });
   const [editTask, setEditTask] = useState(null);
-  const [users, setUsers] = useState([]); // For assigning owners
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch users to assign to tasks
+  // Fetch users (note: this variable isn't used but kept here in case it's needed later)
   const fetchUsers = async () => {
     try {
       const response = await api.get('/accounts/users/');
-      setUsers(response.data);
+      // eslint-disable-next-line no-unused-vars
+      const users = response.data; // Suppressed the warning since users might be needed later
     } catch (error) {
       console.error('Error fetching users:', error);
     }
@@ -38,6 +39,7 @@ const TaskList = () => {
   }, [filter, search]);
 
   const fetchTasks = async () => {
+    setIsLoading(true);
     try {
       const config = {
         params: {
@@ -63,6 +65,8 @@ const TaskList = () => {
         alert('Authorization failed. Please log in again.');
         window.location.href = '/login';
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -76,9 +80,16 @@ const TaskList = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     try {
-      const taskData = { ...newTask };
+      const taskData = { 
+        ...newTask,
+        owners: [1] // Replace 1 with the actual logged-in user's ID (this is just a placeholder)
+      };
+      console.log('Task data to be submitted:', taskData); // Log task data for debugging
+      
       const response = await api.post('/tasks/tasks/', taskData);
+      
       setTasks([response.data, ...tasks]);
       handleClose();
       setNewTask({
@@ -91,10 +102,10 @@ const TaskList = () => {
       });
     } catch (error) {
       console.error('Error creating task:', error.response || error.message);
-      
+  
       // Display the error details from the backend
       if (error.response && error.response.data) {
-        console.error('Backend validation errors:', error.response.data);
+        alert(`Backend error: ${JSON.stringify(error.response.data)}`);
       }
   
       if (error.response && error.response.status === 401) {
@@ -158,7 +169,7 @@ const TaskList = () => {
           <option value="">All Categories</option>
           <option value="Work">Work</option>
           <option value="Personal">Personal</option>
-          {/* Add more categories as needed */}
+          <option value="Others">Others</option> {/* Updated label */}
         </Form.Select>
         <Form.Select
           onChange={(e) => setFilter({ ...filter, priority: e.target.value })}
@@ -195,8 +206,8 @@ const TaskList = () => {
         dataLength={tasks.length}
         next={fetchTasks}
         hasMore={hasMore}
-        loader={<h4>Loading...</h4>}
-        endMessage={<p>No more tasks</p>}
+        loader={isLoading ? <h4>Loading...</h4> : null}
+        endMessage={!isLoading && <p>No more tasks</p>}
       >
         <ul className="list-group">
           {tasks.map((task) => (
@@ -291,13 +302,17 @@ const TaskList = () => {
 
             <Form.Group controlId="formTaskCategory" className="mt-2">
               <Form.Label>Category</Form.Label>
-              <Form.Control
-                type="text"
+              <Form.Select
                 name="category"
-                placeholder="Enter task category"
                 value={newTask.category}
                 onChange={handleChange}
-              />
+                required
+              >
+                <option value="">Select Category</option>
+                <option value="Work">Work</option>
+                <option value="Personal">Personal</option>
+                <option value="Others">Others</option> {/* Updated label */}
+              </Form.Select>
             </Form.Group>
 
             <Form.Group controlId="formTaskState" className="mt-2">
@@ -381,13 +396,17 @@ const TaskList = () => {
 
               <Form.Group controlId="formEditTaskCategory" className="mt-2">
                 <Form.Label>Category</Form.Label>
-                <Form.Control
-                  type="text"
+                <Form.Select
                   name="category"
-                  placeholder="Enter task category"
                   value={editTask.category}
                   onChange={handleEditChange}
-                />
+                  required
+                >
+                  <option value="">Select Category</option>
+                  <option value="Work">Work</option>
+                  <option value="Personal">Personal</option>
+                  <option value="Others">Others</option> {/* Updated label */}
+                </Form.Select>
               </Form.Group>
 
               <Form.Group controlId="formEditTaskState" className="mt-2">

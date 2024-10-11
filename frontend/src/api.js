@@ -7,6 +7,7 @@ const api = axios.create({
   },
 });
 
+// Interceptor to add Authorization header
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
@@ -15,28 +16,28 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
+// Handle token refresh on 401 Unauthorized
 api.interceptors.response.use(
-  (response) => response,
+  (response) => response, // If the response is successful, just return it
   async (error) => {
     const originalRequest = error.config;
-    const refreshToken = localStorage.getItem('refresh_token');
-
-    if (error.response.status === 401 && refreshToken && !originalRequest._retry) {
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        const response = await axios.post('/api/token/refresh/', { refresh: refreshToken });
-        localStorage.setItem('access_token', response.data.access);
-        originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
-        return api(originalRequest);
+        const refreshToken = localStorage.getItem('refresh_token');
+        const { data } = await axios.post('/api/token/refresh/', { refresh: refreshToken });
+        localStorage.setItem('access_token', data.access);
+        api.defaults.headers.Authorization = `Bearer ${data.access}`;
+        return api(originalRequest); // Retry the original request with the new access token
       } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        window.location.href = '/login';
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login'; // Redirect to login if refresh fails
+        return Promise.reject(refreshError);
       }
     }
 

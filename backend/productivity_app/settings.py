@@ -10,7 +10,6 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = [
     '8000-jorritvans-productivity-my39hyagwgi.ws-eu116.gitpod.io',
     '8080-jorritvans-productivity-my39hyagwgi.ws-eu116.gitpod.io',
-    'your-production-domain.com',  # Add your production domain here
 ]
 
 INSTALLED_APPS = [
@@ -121,7 +120,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': False,
+    'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }

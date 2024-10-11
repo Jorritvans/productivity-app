@@ -25,7 +25,7 @@ const TaskList = () => {
   const fetchUsers = async () => {
     try {
       const response = await api.get('/accounts/users/');
-      const users = response.data; // Suppressed the warning since users might be needed later
+      const users = response.data;
     } catch (error) {
       console.error('Error fetching users:', error);
     }
@@ -33,7 +33,8 @@ const TaskList = () => {
 
   useEffect(() => {
     fetchUsers();
-    fetchTasks(true); // Reset the tasks when filter or search changes
+    // Reset tasks and refetch whenever filter or search changes
+    fetchTasks(true);
   }, [filter, search]);
 
   const fetchTasks = async (reset = false) => {
@@ -41,15 +42,17 @@ const TaskList = () => {
     try {
       const config = {
         params: {
-          page,
-          search,
-          ...filter,
+          page: reset ? 1 : page, // Reset to page 1 for a new search/filter
+          search: search.trim(), // Trim search input to avoid accidental spaces
+          ...filter, // Spread the filter object to include category, priority, state
         },
       };
-  
+
+      console.log('Fetching tasks with config:', config); // Debugging the filter values and search
+
       const response = await api.get('/tasks/tasks/', config);
-      console.log('Fetched tasks:', response.data); // Log response for debugging
-  
+      console.log('Fetched tasks:', response.data);
+
       if (response.status === 200 && Array.isArray(response.data)) {
         if (reset) {
           setTasks(response.data); // Reset tasks for a new search or filter
@@ -58,7 +61,7 @@ const TaskList = () => {
           setTasks((prevTasks) => [...prevTasks, ...response.data]); // Append new tasks
           setPage((prevPage) => prevPage + 1); // Increment the page number
         }
-  
+
         if (response.data.length === 0) {
           setHasMore(false);
         }
@@ -86,16 +89,16 @@ const TaskList = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
-      const taskData = { 
+      const taskData = {
         ...newTask,
         owners: [1], // Replace 1 with the actual logged-in user's ID (this is just a placeholder)
       };
       console.log('Task data to be submitted:', taskData); // Log task data for debugging
-      
+
       const response = await api.post('/tasks/tasks/', taskData);
-      
+
       setTasks([response.data, ...tasks]);
       handleClose();
       setNewTask({
@@ -108,18 +111,18 @@ const TaskList = () => {
       });
     } catch (error) {
       console.error('Error creating task:', error.response || error.message);
-  
+
       // Display the error details from the backend
       if (error.response && error.response.data) {
         alert(`Backend error: ${JSON.stringify(error.response.data)}`);
       }
-  
+
       if (error.response && error.response.status === 401) {
         alert('Authorization failed. Please log in again.');
         window.location.href = '/login';
       }
     }
-  };  
+  };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -175,7 +178,7 @@ const TaskList = () => {
           <option value="">All Categories</option>
           <option value="Work">Work</option>
           <option value="Personal">Personal</option>
-          <option value="Others">Others</option> {/* Updated label */}
+          <option value="Others">Others</option>
         </Form.Select>
         <Form.Select
           onChange={(e) => setFilter({ ...filter, priority: e.target.value })}
@@ -210,7 +213,7 @@ const TaskList = () => {
       {/* Infinite Scroll */}
       <InfiniteScroll
         dataLength={tasks.length}
-        next={fetchTasks}
+        next={() => fetchTasks(false)} // Load more tasks
         hasMore={hasMore}
         loader={isLoading ? <h4>Loading...</h4> : null}
         endMessage={!isLoading && <p>No more tasks</p>}

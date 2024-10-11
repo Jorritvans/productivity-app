@@ -25,7 +25,6 @@ const TaskList = () => {
   const fetchUsers = async () => {
     try {
       const response = await api.get('/accounts/users/');
-      // eslint-disable-next-line no-unused-vars
       const users = response.data; // Suppressed the warning since users might be needed later
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -34,11 +33,10 @@ const TaskList = () => {
 
   useEffect(() => {
     fetchUsers();
-    fetchTasks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchTasks(true); // Reset the tasks when filter or search changes
   }, [filter, search]);
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (reset = false) => {
     setIsLoading(true);
     try {
       const config = {
@@ -48,12 +46,20 @@ const TaskList = () => {
           ...filter,
         },
       };
+  
       const response = await api.get('/tasks/tasks/', config);
-
-      if (response.status === 200 && Array.isArray(response.data.results)) {
-        setTasks((prevTasks) => [...prevTasks, ...response.data.results]);
-        setPage(page + 1);
-        if (!response.data.next) {
+      console.log('Fetched tasks:', response.data); // Log response for debugging
+  
+      if (response.status === 200 && Array.isArray(response.data)) {
+        if (reset) {
+          setTasks(response.data); // Reset tasks for a new search or filter
+          setPage(2); // Reset to the second page for next scroll
+        } else {
+          setTasks((prevTasks) => [...prevTasks, ...response.data]); // Append new tasks
+          setPage((prevPage) => prevPage + 1); // Increment the page number
+        }
+  
+        if (response.data.length === 0) {
           setHasMore(false);
         }
       } else {
@@ -84,7 +90,7 @@ const TaskList = () => {
     try {
       const taskData = { 
         ...newTask,
-        owners: [1] // Replace 1 with the actual logged-in user's ID (this is just a placeholder)
+        owners: [1], // Replace 1 with the actual logged-in user's ID (this is just a placeholder)
       };
       console.log('Task data to be submitted:', taskData); // Log task data for debugging
       
@@ -210,8 +216,8 @@ const TaskList = () => {
         endMessage={!isLoading && <p>No more tasks</p>}
       >
         <ul className="list-group">
-          {tasks.map((task) => (
-            <li key={task.id} className="list-group-item d-flex justify-content-between align-items-center">
+          {tasks.map((task, index) => (
+            <li key={`${task.id}-${index}`} className="list-group-item d-flex justify-content-between align-items-center">
               <div>
                 <h5>{task.title}</h5>
                 <p>
@@ -311,7 +317,7 @@ const TaskList = () => {
                 <option value="">Select Category</option>
                 <option value="Work">Work</option>
                 <option value="Personal">Personal</option>
-                <option value="Others">Others</option> {/* Updated label */}
+                <option value="Others">Others</option>
               </Form.Select>
             </Form.Group>
 
@@ -405,7 +411,7 @@ const TaskList = () => {
                   <option value="">Select Category</option>
                   <option value="Work">Work</option>
                   <option value="Personal">Personal</option>
-                  <option value="Others">Others</option> {/* Updated label */}
+                  <option value="Others">Others</option>
                 </Form.Select>
               </Form.Group>
 

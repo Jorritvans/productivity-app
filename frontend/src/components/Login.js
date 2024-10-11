@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../api'; // Uses the updated api.js with correct baseURL
+import api from '../api'; 
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Alert } from 'react-bootstrap';
 
@@ -14,10 +14,15 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await api.post('/token/', { username, password }); // Uses relative path
+      const response = await api.post('/token/', { username, password });
       localStorage.setItem('access_token', response.data.access);
       localStorage.setItem('refresh_token', response.data.refresh);
-      navigate('/tasks');
+      
+      // Navigate to tasks page after successful login
+      navigate('/tasks', { replace: true });
+      
+      // Optionally, trigger a page reload to ensure the auth state is fully updated
+      window.location.reload(); // Force page reload to update authentication state
     } catch (error) {
       if (error.response) {
         setError(`Login failed: ${error.response.data.detail}`);

@@ -91,12 +91,18 @@ const TaskList = () => {
       });
     } catch (error) {
       console.error('Error creating task:', error.response || error.message);
+      
+      // Display the error details from the backend
+      if (error.response && error.response.data) {
+        console.error('Backend validation errors:', error.response.data);
+      }
+  
       if (error.response && error.response.status === 401) {
         alert('Authorization failed. Please log in again.');
         window.location.href = '/login';
       }
     }
-  };
+  };  
 
   const handleUpdate = async (e) => {
     e.preventDefault();

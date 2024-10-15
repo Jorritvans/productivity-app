@@ -24,19 +24,31 @@ api.interceptors.response.use(
   (response) => response, // If the response is successful, just return it
   async (error) => {
     const originalRequest = error.config;
+
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem('refresh_token');
-        const { data } = await axios.post('/api/token/refresh/', { refresh: refreshToken });
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
+
+        const { data } = await axios.post(
+          `${process.env.REACT_APP_API_BASE_URL}/api/token/refresh/`,
+          { refresh: refreshToken }
+        );
         localStorage.setItem('access_token', data.access);
         api.defaults.headers.Authorization = `Bearer ${data.access}`;
-        return api(originalRequest); // Retry the original request with the new access token
+        return api(originalRequest);
       } catch (refreshError) {
+        // Remove tokens and dispatch sessionExpired event
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        window.location.href = '/login'; // Redirect to login if refresh fails
+
+        const event = new Event('sessionExpired');
+        window.dispatchEvent(event);
+
         return Promise.reject(refreshError);
       }
     }

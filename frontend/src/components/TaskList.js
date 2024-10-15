@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../api';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { Container, Button, Modal, Form, Badge } from 'react-bootstrap';
+import { debounce } from 'lodash';
 
 const TaskList = () => {
   const [tasks, setTasks] = useState([]);
@@ -21,20 +22,43 @@ const TaskList = () => {
   const [editTask, setEditTask] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch users (note: this variable isn't used but kept here in case it's needed later)
+  // Ref to track initial render
+  const isFirstRender = useRef(true);
+
+  // Fetch users (note: this function isn't used but kept here in case it's needed later)
   const fetchUsers = async () => {
     try {
       const response = await api.get('/accounts/users/');
       const users = response.data;
+      // You can set the users state here if needed
     } catch (error) {
       console.error('Error fetching users:', error);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
-    // Reset tasks and refetch whenever filter or search changes
-    fetchTasks(true);
+    let isCancelled = false;
+
+    const initialize = async () => {
+      if (isFirstRender.current) {
+        isFirstRender.current = false;
+        await fetchUsers();
+        if (!isCancelled) {
+          await fetchTasks(true);
+        }
+      } else {
+        if (!isCancelled) {
+          await fetchTasks(true);
+        }
+      }
+    };
+
+    initialize();
+
+    return () => {
+      isCancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, search]);
 
   const fetchTasks = async (reset = false) => {
@@ -42,28 +66,26 @@ const TaskList = () => {
     try {
       const config = {
         params: {
-          page: reset ? 1 : page, // Reset to page 1 for a new search/filter
-          search: search.trim(), // Trim search input to avoid accidental spaces
-          ...filter, // Spread the filter object to include category, priority, state
+          page: reset ? 1 : page,
+          search: search.trim(),
+          ...filter,
         },
       };
 
-      console.log('Fetching tasks with config:', config); // Debugging the filter values and search
+      console.log('Fetching tasks with config:', config);
 
       const response = await api.get('/tasks/tasks/', config);
       console.log('Fetched tasks:', response.data);
 
       if (response.status === 200 && Array.isArray(response.data)) {
         if (reset) {
-          setTasks(response.data); // Reset tasks for a new search or filter
-          setPage(2); // Reset to the second page for next scroll
+          setTasks(response.data);
+          setPage(2);
+          setHasMore(response.data.length > 0);
         } else {
-          setTasks((prevTasks) => [...prevTasks, ...response.data]); // Append new tasks
-          setPage((prevPage) => prevPage + 1); // Increment the page number
-        }
-
-        if (response.data.length === 0) {
-          setHasMore(false);
+          setTasks((prevTasks) => [...prevTasks, ...response.data]);
+          setPage((prevPage) => prevPage + 1);
+          setHasMore(response.data.length > 0);
         }
       } else {
         console.error('Unexpected response structure:', response.data);
@@ -77,6 +99,26 @@ const TaskList = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilter((prevFilter) => {
+      if (prevFilter[name] === value) return prevFilter; // No change
+      return { ...prevFilter, [name]: value };
+    });
+  };
+
+  // Debounce search input to prevent rapid calls
+  const debouncedSetSearch = useCallback(
+    debounce((value) => {
+      setSearch(value);
+    }, 500),
+    []
+  );
+
+  const handleSearchChange = (e) => {
+    debouncedSetSearch(e.target.value);
   };
 
   const handleChange = (e) => {
@@ -93,9 +135,9 @@ const TaskList = () => {
     try {
       const taskData = {
         ...newTask,
-        owners: [1], // Replace 1 with the actual logged-in user's ID (this is just a placeholder)
+        owners: [1], // Replace with actual logged-in user's ID
       };
-      console.log('Task data to be submitted:', taskData); // Log task data for debugging
+      console.log('Task data to be submitted:', taskData);
 
       const response = await api.post('/tasks/tasks/', taskData);
 
@@ -112,7 +154,6 @@ const TaskList = () => {
     } catch (error) {
       console.error('Error creating task:', error.response || error.message);
 
-      // Display the error details from the backend
       if (error.response && error.response.data) {
         alert(`Backend error: ${JSON.stringify(error.response.data)}`);
       }
@@ -171,7 +212,9 @@ const TaskList = () => {
       {/* Filters */}
       <div className="filters mb-3 d-flex flex-wrap">
         <Form.Select
-          onChange={(e) => setFilter({ ...filter, category: e.target.value })}
+          name="category"
+          value={filter.category}
+          onChange={handleFilterChange}
           className="me-2 mb-2"
           aria-label="Filter by Category"
         >
@@ -181,7 +224,9 @@ const TaskList = () => {
           <option value="Others">Others</option>
         </Form.Select>
         <Form.Select
-          onChange={(e) => setFilter({ ...filter, priority: e.target.value })}
+          name="priority"
+          value={filter.priority}
+          onChange={handleFilterChange}
           className="me-2 mb-2"
           aria-label="Filter by Priority"
         >
@@ -191,7 +236,9 @@ const TaskList = () => {
           <option value="High">High</option>
         </Form.Select>
         <Form.Select
-          onChange={(e) => setFilter({ ...filter, state: e.target.value })}
+          name="state"
+          value={filter.state}
+          onChange={handleFilterChange}
           className="me-2 mb-2"
           aria-label="Filter by State"
         >
@@ -206,7 +253,8 @@ const TaskList = () => {
       <Form.Control
         type="text"
         placeholder="Search tasks"
-        onChange={(e) => setSearch(e.target.value)}
+        defaultValue={search}
+        onChange={handleSearchChange}
         className="mb-3"
       />
 
@@ -220,7 +268,10 @@ const TaskList = () => {
       >
         <ul className="list-group">
           {tasks.map((task, index) => (
-            <li key={`${task.id}-${index}`} className="list-group-item d-flex justify-content-between align-items-center">
+            <li
+              key={`${task.id}-${index}`}
+              className="list-group-item d-flex justify-content-between align-items-center"
+            >
               <div>
                 <h5>{task.title}</h5>
                 <p>
@@ -240,7 +291,12 @@ const TaskList = () => {
                 </p>
               </div>
               <div>
-                <Button variant="secondary" size="sm" onClick={() => handleEditShow(task)} className="me-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleEditShow(task)}
+                  className="me-2"
+                >
                   Edit
                 </Button>
                 <Button variant="danger" size="sm" onClick={() => handleDelete(task.id)}>

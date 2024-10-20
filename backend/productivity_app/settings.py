@@ -8,8 +8,10 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'your-default-secret-key')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = [
-    '8000-jorritvans-productivity-my39hyagwgi.ws-eu116.gitpod.io',
-    '8080-jorritvans-productivity-my39hyagwgi.ws-eu116.gitpod.io',
+    'localhost',
+    '127.0.0.1',
+    '8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
+    '8080-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
 ]
 
 INSTALLED_APPS = [
@@ -106,9 +108,8 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = True  # Update for production to restrict origins
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://8000-jorritvans-productivity-my39hyagwgi.ws-eu116.gitpod.io',
-    'https://8080-jorritvans-productivity-my39hyagwgi.ws-eu116.gitpod.io',
-    'https://your-production-domain.com',  # Add your production domain here
+    'https://8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
+    'https://8080-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
 ]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

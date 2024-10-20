@@ -34,7 +34,7 @@ const Register = () => {
         } else if (backendError.password) {
           setError(backendError.password.join(' ')); // Password validation error
         } else {
-          setError('Registration failed. Please check your inputs.');
+          setError('Username already exists. Please check your inputs.');
         }
       } else if (error.request) {
         // No response from the server

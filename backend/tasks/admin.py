@@ -3,7 +3,5 @@ from .models import Task
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ['title', 'due_date', 'priority', 'category', 'state']
-    list_filter = ['priority', 'category', 'state']
-    search_fields = ['title', 'description']
-    filter_horizontal = ['owners']
+    list_display = ['title', 'due_date', 'priority', 'category']  # Removed 'owners'
+    # Removed filter_horizontal related to 'owners'

@@ -7,8 +7,24 @@ from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .serializers import UserSerializer
+import logging
 
+logger = logging.getLogger(__name__)
+
+# Simple API Root
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def api_root(request):
+    return Response({
+        "accounts": "/api/accounts/",
+        "tasks": "/api/tasks/",
+        "token": "/api/token/",
+        "refresh_token": "/api/token/refresh/",
+    })
+
+# User Registration View
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
@@ -45,7 +61,12 @@ def register(request):
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# User List View
 class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+
+# JWT Token views from `rest_framework_simplejwt`
+MyTokenObtainPairView = TokenObtainPairView
+MyTokenRefreshView = TokenRefreshView

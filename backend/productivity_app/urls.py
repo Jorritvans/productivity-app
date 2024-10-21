@@ -14,17 +14,25 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path, include, re_path
-from django.views.generic import TemplateView
+from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from accounts.views import api_root  # Import your api_root view
+from django.contrib import admin
 
 urlpatterns = [
-    path('admin', admin.site.urls),
-    path('api/accounts/', include('accounts.urls')),  # API for accounts
-    path('api/tasks/', include('tasks.urls')),        # API for tasks
+    path('admin/', admin.site.urls),
+    
+    # Include your app URLs
+    path('api/accounts/', include('accounts.urls')),
+    path('api/tasks/', include('tasks.urls')),
+
+    # JWT Token endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    # Catch-all route to serve React's index.html for client-side routing
-    re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
+
+    # Root URL - this will display the api_root view when you visit the root URL
+    path('', api_root),  # This catches requests to the root URL
+    
+    # Browsable API authentication endpoints
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]

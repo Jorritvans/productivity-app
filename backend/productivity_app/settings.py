@@ -1,3 +1,5 @@
+# productivity_app/settings.py
+
 from pathlib import Path
 import os
 from datetime import timedelta
@@ -11,10 +13,48 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
-    '8080-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
+    '8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
 ]
 
+# CORS Settings
+CORS_ALLOWED_ORIGINS = [
+    'https://8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
+    'http://localhost:3000',  # Add this if you're testing locally
+]
+
+# Uncomment for debugging purposes (NOT recommended for production)
+# CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'authorization',
+    'content-type',
+    'x-csrftoken',
+]
+
+CORS_ALLOW_CREDENTIALS = True  # Allow credentials like cookies or tokens
+
+# CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = [
+    'https://8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
+    'https://8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
+    'http://localhost:3000',  # Add this if you're testing locally
+]
+
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
+
 INSTALLED_APPS = [
+    'corsheaders',  # CORS handling should be first in INSTALLED_APPS
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -23,7 +63,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    'corsheaders',
     'cloudinary',
     'cloudinary_storage',
     'accounts',
@@ -31,12 +70,12 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Must be first
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Added WhiteNoise for static files
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # For handling static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',  # CSRF protection
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -47,7 +86,7 @@ ROOT_URLCONF = 'productivity_app.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'frontend', 'build')],
+        'DIRS': [],  # No need to serve frontend templates from backend
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -61,6 +100,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'productivity_app.wsgi.application'
+ASGI_APPLICATION = 'productivity_app.asgi.application'  # Include if using ASGI
 
 DATABASES = {
     'default': {
@@ -82,9 +122,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'frontend', 'build', 'static'),
-]
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Cloudinary Configuration
@@ -100,22 +138,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
 }
 
-CORS_ALLOW_ALL_ORIGINS = True  # Update for production to restrict origins
-
-CSRF_TRUSTED_ORIGINS = [
-    'https://8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
-    'https://8080-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
-]
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# WhiteNoise Configuration
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # JWT Configuration
 SIMPLE_JWT = {

@@ -6,7 +6,7 @@ class Task(models.Model):
     due_date = models.DateField()
     priority = models.CharField(max_length=10, choices=(('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')))
     category = models.CharField(max_length=50)
-    state = models.CharField(max_length=50, choices=(('Open', 'Open'), ('In Progress', 'In Progress'), ('Done', 'Done')))
+    state = models.CharField(max_length=50, choices=(('To-Do', 'To-Do'), ('In Progress', 'In Progress'), ('Done', 'Done')))
     created_at = models.DateTimeField(auto_now_add=True)  
     updated_at = models.DateTimeField(auto_now=True)
 

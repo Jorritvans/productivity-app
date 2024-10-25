@@ -7,29 +7,32 @@ from rest_framework import status
 from django.db import IntegrityError
 from django_filters.rest_framework import DjangoFilterBackend
 import logging
+from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
+    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['category', 'priority', 'state']
     search_fields = ['title', 'description']
 
     def perform_create(self, serializer):
         try:
-            task = serializer.save()
-            logger.info(f'Task created: {task.title}')
+            # Assign the owner as the logged-in user
+            task = serializer.save(owner=self.request.user)
+            logger.info(f'Task created: {task.title} by {self.request.user}')
         except IntegrityError as e:
             logger.error(f'Error creating task: {str(e)}')
             raise e
 
     def get_queryset(self):
         """
-        Override to filter the queryset based on category, priority, and state.
+        Override to filter the queryset so each user only sees their own tasks.
         """
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().filter(owner=self.request.user)
         category = self.request.query_params.get('category', '')
         priority = self.request.query_params.get('priority', '')
         state = self.request.query_params.get('state', '')

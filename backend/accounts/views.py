@@ -10,6 +10,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .serializers import UserSerializer
 import logging
+from tasks.models import Task
+from tasks.serializers import TaskSerializer
+from django.utils.dateformat import format
+from datetime import datetime
+from django.contrib.auth.models import User
+from tasks.models import Task
 
 logger = logging.getLogger(__name__)
 
@@ -70,3 +76,39 @@ class UserListView(generics.ListAPIView):
 # JWT Token views from `rest_framework_simplejwt`
 MyTokenObtainPairView = TokenObtainPairView
 MyTokenRefreshView = TokenRefreshView
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def profile_view(request):
+    user = request.user
+
+    # Retrieve user data
+    user_data = {
+        "username": user.username,
+        "email": user.email,
+        "date_joined": user.date_joined.strftime("%Y-%m-%d"),  # Format date here
+    }
+
+    # Retrieve tasks associated with the user
+    tasks = Task.objects.filter(owner=user)
+    task_data = TaskSerializer(tasks, many=True).data
+
+    return Response({
+        "user": user_data,
+        "tasks": task_data,
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_users(request):
+    query = request.query_params.get('q', '')  # Get the 'q' parameter from the query string
+    users = User.objects.filter(username__icontains=query)  # Filter users by username containing the query string
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_tasks(request, owner_id):
+    tasks = Task.objects.filter(owner_id=owner_id)
+    serializer = TaskSerializer(tasks, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)

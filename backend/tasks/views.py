@@ -1,6 +1,8 @@
+# tasks/views.py
+
 from rest_framework import viewsets, permissions, filters
-from .models import Task
-from .serializers import TaskSerializer
+from .models import Task, Comment  # Import Comment model
+from .serializers import TaskSerializer, CommentSerializer  # Import CommentSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -76,3 +78,35 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Response({'status': 'user unassigned'})
         except User.DoesNotExist:
             return Response({'error': 'User does not exist'}, status=400)
+
+# Add the custom permission class
+class IsAuthorOrReadOnly(permissions.BasePermission):
+    """
+    Custom permission to only allow authors of a comment to edit or delete it.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Write permissions are only allowed to the author of the comment.
+        return obj.author == request.user
+
+# Update the CommentViewSet
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated, IsAuthorOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    # Optionally, filter comments by task if needed
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        task_id = self.request.query_params.get('task', None)
+        if task_id is not None:
+            queryset = queryset.filter(task_id=task_id)
+        return queryset

@@ -1,3 +1,5 @@
+# accounts/views.py
+
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.contrib.auth.password_validation import validate_password
@@ -14,8 +16,6 @@ from tasks.models import Task
 from tasks.serializers import TaskSerializer
 from django.utils.dateformat import format
 from datetime import datetime
-from django.contrib.auth.models import User
-from tasks.models import Task
 from .models import Following
 from .serializers import FollowingSerializer
 
@@ -63,6 +63,8 @@ def register(request):
                 "message": "Registration successful.",
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
+                "user_id": user.id,  # Include user_id in response
+                "username": user.username,  # Include username in response
             }, status=status.HTTP_201_CREATED)
         except IntegrityError:
             return Response({"error": "Integrity error occurred"}, status=status.HTTP_400_BAD_REQUEST)
@@ -75,8 +77,31 @@ class UserListView(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
-# JWT Token views from `rest_framework_simplejwt`
-MyTokenObtainPairView = TokenObtainPairView
+# Custom TokenObtainPairSerializer and TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Add custom claims
+        token['username'] = user.username
+        token['user_id'] = user.id  # Add user ID
+
+        return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data['user_id'] = self.user.id  # Include user ID in response
+        data['username'] = self.user.username
+        return data
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
+
+# JWT Token Refresh View
 MyTokenRefreshView = TokenRefreshView
 
 @api_view(['GET'])
@@ -147,8 +172,6 @@ def unfollow_user(request, user_id):
 @permission_classes([IsAuthenticated])
 def followed_tasks(request):
     followed_users = Following.objects.filter(follower=request.user).values_list('followed', flat=True)
-    from tasks.models import Task
-    from tasks.serializers import TaskSerializer
     tasks = Task.objects.filter(owner__id__in=followed_users)
     serializer = TaskSerializer(tasks, many=True)
     return Response(serializer.data)
@@ -158,6 +181,5 @@ def followed_tasks(request):
 def following_list(request):
     following_relations = Following.objects.filter(follower=request.user)
     followed_users = [relation.followed for relation in following_relations]
-    from .serializers import UserSerializer
     serializer = UserSerializer(followed_users, many=True)
     return Response(serializer.data)

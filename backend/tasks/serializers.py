@@ -1,5 +1,6 @@
+# serializers.py
 from rest_framework import serializers
-from .models import Task, Comment, Notification
+from .models import Task, Comment  # Removed Notification import
 from django.contrib.auth.models import User
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -24,9 +25,5 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'author', 'created_at', 'author_username']
 
     def create(self, validated_data):
-        comment = super().create(validated_data)
-        task = validated_data.get('task')
-        if task.owner != comment.author:  # Only notify if commenter isn't the owner
-            message = f"{comment.author.username} commented on your task: '{task.title}'"
-            Notification.objects.create(recipient=task.owner, message=message)
-        return comment
+        # Simplified creation of the comment without notification logic
+        return super().create(validated_data)

@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'cloudinary_storage',
     'accounts',
     'tasks',
+    'django_filters',
 ]
 
 MIDDLEWARE = [

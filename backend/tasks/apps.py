@@ -7,6 +7,7 @@ class TasksConfig(AppConfig):
     def ready(self):
         # Use lazy import of Session and the logout function to avoid app registry issues
         from django.utils.module_loading import import_string
+        import tasks.signals
         
         # Get the Session model after the app registry is ready
         Session = import_string('django.contrib.sessions.models.Session')

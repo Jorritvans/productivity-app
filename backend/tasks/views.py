@@ -1,15 +1,16 @@
 # tasks/views.py
 
 from rest_framework import viewsets, permissions, filters
-from .models import Task, Comment  # Import Comment model
-from .serializers import TaskSerializer, CommentSerializer  # Import CommentSerializer
-from rest_framework.decorators import action
+from .models import Task, Comment, Notification
+from .serializers import TaskSerializer, CommentSerializer
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from django.db import IntegrityError
 from django_filters.rest_framework import DjangoFilterBackend
 import logging
 from django.contrib.auth.models import User
+from rest_framework.permissions import IsAuthenticated
 
 logger = logging.getLogger(__name__)
 
@@ -110,3 +111,20 @@ class CommentViewSet(viewsets.ModelViewSet):
         if task_id is not None:
             queryset = queryset.filter(task_id=task_id)
         return queryset
+
+@api_view(['GET'])
+def user_notifications(request):
+    notifications = Notification.objects.filter(recipient=request.user, read=False)
+    data = [{'id': n.id, 'message': n.message, 'created_at': n.created_at} for n in notifications]
+    return Response(data)
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def mark_notification_as_read(request, pk):
+    try:
+        notification = Notification.objects.get(pk=pk, recipient=request.user)
+        notification.read = True
+        notification.save()
+        return Response({'message': 'Notification marked as read.'}, status=status.HTTP_200_OK)
+    except Notification.DoesNotExist:
+        return Response({'error': 'Notification not found.'}, status=status.HTTP_404_NOT_FOUND)

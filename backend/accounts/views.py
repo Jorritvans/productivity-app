@@ -136,9 +136,13 @@ def search_users(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_tasks(request, owner_id):
-    tasks = Task.objects.filter(owner_id=owner_id)
-    serializer = TaskSerializer(tasks, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    try:
+        tasks = Task.objects.filter(owner_id=owner_id)
+        is_following = Following.objects.filter(follower=request.user, followed_id=owner_id).exists()
+        serializer = TaskSerializer(tasks, many=True)
+        return Response({"tasks": serializer.data, "is_following": is_following}, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

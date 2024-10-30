@@ -5,11 +5,12 @@ from django.contrib.auth.models import User
 
 class TaskSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
+    owner_id = serializers.ReadOnlyField(source='owner.id')  # Add owner_id here
     comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'state', 'due_date', 'priority', 'category', 'owner', 'comments']
+        fields = ['id', 'title', 'description', 'state', 'due_date', 'priority', 'category', 'owner', 'owner_id', 'comments']  # Include 'owner_id' in fields
 
     def get_comments(self, obj):
         comments = obj.comments.all()

@@ -18,8 +18,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
     '8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
-    'productivity-app-jorrit-49d8d1e48534.herokuapp.com',
-    'productivity-app-frontend-ea5313cc46b8.herokuapp.com'  # Add your new frontend link here
+    os.environ.get('ALLOWED_HOST'),
 ]
 
 # CORS Settings
@@ -29,8 +28,7 @@ else:
     CORS_ALLOWED_ORIGINS = [
         'https://8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
         'http://localhost:3000',
-        'https://productivity-app-jorrit-49d8d1e48534.herokuapp.com',
-        'https://productivity-app-frontend-ea5313cc46b8.herokuapp.com'
+        os.environ.get('ALLOWED_HOST'),
     ]
 
 if 'FRONTEND_BASE_URL' in os.environ:
@@ -63,8 +61,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
     'https://8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
     'http://localhost:3000',
-    'https://productivity-app-jorrit-49d8d1e48534.herokuapp.com',
-    'https://productivity-app-frontend-ea5313cc46b8.herokuapp.com'  # Add your new frontend link here
+    os.environ.get('ALLOWED_HOST'),
 ]
 
 CSRF_COOKIE_NAME = 'csrftoken'

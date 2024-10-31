@@ -2,18 +2,23 @@
 
 from pathlib import Path
 import os
+import dj_database_url
 from datetime import timedelta
+
+if os.path.isfile('env.py'):
+    import env
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'your-default-secret-key')
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = 'DEV' in os.environ
 
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
     '8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
+    'productivity-app-jorrit-49d8d1e48534.herokuapp.com'
 ]
 
 # CORS Settings
@@ -54,7 +59,7 @@ CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
 
 INSTALLED_APPS = [
-    'corsheaders',  # CORS handling should be first in INSTALLED_APPS
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -82,6 +87,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+if 'CLIENT_ORIGIN' in os.environ:
+     CORS_ALLOWED_ORIGINS = [
+         os.environ.get('CLIENT_ORIGIN')
+     ]
+else:
+     CORS_ALLOWED_ORIGIN_REGEXES = [
+         r"^https://.*\.gitpod\.io$",
+     ]
+
 ROOT_URLCONF = 'productivity_app.urls'
 
 TEMPLATES = [
@@ -103,12 +117,22 @@ TEMPLATES = [
 WSGI_APPLICATION = 'productivity_app.wsgi.application'
 ASGI_APPLICATION = 'productivity_app.asgi.application'  # Include if using ASGI
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+database_url = os.environ.get("DATABASE_URL")
+
+if 'DEV' in os.environ:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    if database_url:
+        DATABASES = {
+            'default': dj_database_url.parse(database_url)
+        }
+    else:
+        raise ValueError("DATABASE_URL is not set or is empty.")
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -144,10 +168,14 @@ REST_FRAMEWORK = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # JWT Configuration
+# JWT Configuration
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=2),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=2),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'JWT_AUTH_COOKIE': 'my-app-auth',
+    'JWT_AUTH_REFRESH_COOKIE': 'my-refresh-token',
+    'JWT_AUTH_SAMESITE': 'None'
 }

@@ -33,6 +33,9 @@ else:
         'https://productivity-app-frontend-ea5313cc46b8.herokuapp.com'
     ]
 
+if 'FRONTEND_BASE_URL' in os.environ:
+    CORS_ALLOWED_ORIGINS.append(os.environ.get('FRONTEND_BASE_URL'))
+
 CORS_ALLOW_ORIGIN_REGEXES = [
     r"^https://.*\.codeinstitute-ide\.net$"
 ]

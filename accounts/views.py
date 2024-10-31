@@ -1,5 +1,3 @@
-# accounts/views.py
-
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.contrib.auth.password_validation import validate_password
@@ -9,17 +7,14 @@ from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import UserSerializer
-import logging
 from tasks.models import Task
 from tasks.serializers import TaskSerializer
-from django.utils.dateformat import format
 from datetime import datetime
 from .models import Following
 from .serializers import FollowingSerializer
-
-logger = logging.getLogger(__name__)
+from django.urls import reverse
 
 # Simple API Root
 @api_view(['GET'])
@@ -37,20 +32,16 @@ def api_root(request):
 @permission_classes([AllowAny])
 def register(request):
     serializer = UserSerializer(data=request.data)
-    
     if serializer.is_valid():
         username = request.data.get('username')
         email = request.data.get('email')
         password = request.data.get('password')
 
-        # Check if username or email already exists
         if User.objects.filter(username=username).exists():
             return Response({"error": "Username already in use"}, status=status.HTTP_400_BAD_REQUEST)
-        
         if User.objects.filter(email=email).exists():
             return Response({"error": "Email already in use"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Validate password
+
         try:
             validate_password(password)
         except ValidationError as e:
@@ -63,12 +54,12 @@ def register(request):
                 "message": "Registration successful.",
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
-                "user_id": user.id,  # Include user_id in response
-                "username": user.username,  # Include username in response
+                "user_id": user.id,
+                "username": user.username,
             }, status=status.HTTP_201_CREATED)
         except IntegrityError:
             return Response({"error": "Integrity error occurred"}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # User List View
@@ -81,42 +72,31 @@ class UserListView(generics.ListAPIView):
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-
-        # Add custom claims
         token['username'] = user.username
-        token['user_id'] = user.id  # Add user ID
-
+        token['user_id'] = user.id
         return token
 
     def validate(self, attrs):
         data = super().validate(attrs)
-        data['user_id'] = self.user.id  # Include user ID in response
+        data['user_id'] = self.user.id
         data['username'] = self.user.username
         return data
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
-# JWT Token Refresh View
-MyTokenRefreshView = TokenRefreshView
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def profile_view(request):
     user = request.user
-
-    # Retrieve user data
     user_data = {
         "username": user.username,
         "email": user.email,
-        "date_joined": user.date_joined.strftime("%Y-%m-%d"),  # Format date here
+        "date_joined": user.date_joined.strftime("%Y-%m-%d"),
     }
-
-    # Retrieve tasks associated with the user
     tasks = Task.objects.filter(owner=user)
     task_data = TaskSerializer(tasks, many=True).data
 
@@ -128,21 +108,26 @@ def profile_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def search_users(request):
-    query = request.query_params.get('q', '')  # Get the 'q' parameter from the query string
-    users = User.objects.filter(username__icontains=query)  # Filter users by username containing the query string
+    query = request.query_params.get('q', '')
+    exclude_user_id = request.query_params.get('exclude_user')
+    
+    users = User.objects.filter(username__icontains=query)
+    if exclude_user_id:
+        users = users.exclude(id=exclude_user_id)
+        
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def user_tasks(request, owner_id):
-    try:
-        tasks = Task.objects.filter(owner_id=owner_id)
-        is_following = Following.objects.filter(follower=request.user, followed_id=owner_id).exists()
-        serializer = TaskSerializer(tasks, many=True)
-        return Response({"tasks": serializer.data, "is_following": is_following}, status=status.HTTP_200_OK)
-    except User.DoesNotExist:
-        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+def search_users(request):
+    query = request.query_params.get('q', '')  # Get the 'q' parameter from the query string
+    current_user = request.user  # Get the current logged-in user
+
+    # Filter users by username containing the query string, excluding the current user
+    users = User.objects.filter(username__icontains=query).exclude(id=current_user.id)
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -187,3 +172,29 @@ def following_list(request):
     followed_users = [relation.followed for relation in following_relations]
     serializer = UserSerializer(followed_users, many=True)
     return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_tasks(request, owner_id):
+    owner = get_object_or_404(User, id=owner_id)
+    tasks = Task.objects.filter(owner=owner)
+    serializer = TaskSerializer(tasks, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+    
+@api_view(['GET'])
+def accounts_root(request):
+    return Response({
+        "register": reverse("register", request=request),
+        "login": reverse("token_obtain_pair", request=request),
+        "token_refresh": reverse("token_refresh", request=request),
+        "user_list": reverse("user_list", request=request),
+        "profile": reverse("profile", request=request),
+        "search_users": reverse("search_users", request=request),
+        "user_tasks": "URL format: /api/accounts/<owner_id>/tasks/",
+        "follow_user": "URL format: /api/accounts/follow/<user_id>/",
+        "unfollow_user": "URL format: /api/accounts/unfollow/<user_id>/",
+        "followed_tasks": reverse("followed_tasks", request=request),
+        "following_list": reverse("following_list", request=request),
+    })

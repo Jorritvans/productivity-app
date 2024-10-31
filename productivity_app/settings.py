@@ -18,18 +18,24 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
     '8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
-    'productivity-app-jorrit-49d8d1e48534.herokuapp.com'
+    'productivity-app-jorrit-49d8d1e48534.herokuapp.com',
+    'productivity-app-frontend-ea5313cc46b8.herokuapp.com'  # Add your new frontend link here
 ]
 
 # CORS Settings
-CORS_ALLOWED_ORIGINS = [
-    'https://8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
-    'http://localhost:3000',  # Add this if you're testing locally
-    'https://productivity-app-jorrit-49d8d1e48534.herokuapp.com'
-]
+if "CLIENT_ORIGIN" in os.environ:
+    CORS_ALLOWED_ORIGINS = [os.environ.get("CLIENT_ORIGIN")]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        'https://8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
+        'http://localhost:3000',
+        'https://productivity-app-jorrit-49d8d1e48534.herokuapp.com',
+        'https://productivity-app-frontend-ea5313cc46b8.herokuapp.com'
+    ]
 
-# Uncomment for debugging purposes (NOT recommended for production)
-# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ORIGIN_REGEXES = [
+    r"^https://.*\.codeinstitute-ide\.net$"
+]
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -53,15 +59,16 @@ CORS_ALLOW_CREDENTIALS = True  # Allow credentials like cookies or tokens
 CSRF_TRUSTED_ORIGINS = [
     'https://8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
     'https://8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
-    'http://localhost:3000',  # Add this if you're testing locally
-    'https://productivity-app-jorrit-49d8d1e48534.herokuapp.com'
+    'http://localhost:3000',
+    'https://productivity-app-jorrit-49d8d1e48534.herokuapp.com',
+    'https://productivity-app-frontend-ea5313cc46b8.herokuapp.com'  # Add your new frontend link here
 ]
 
 CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
 
 INSTALLED_APPS = [
-    'corsheaders',
+    'corsheaders',  # Make sure this is included
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -80,7 +87,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # Must be first
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # For handling static files
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',  # CSRF protection
@@ -89,21 +96,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-if 'CLIENT_ORIGIN' in os.environ:
-    CORS_ALLOWED_ORIGINS = [
-        os.environ.get('CLIENT_ORIGIN')
-    ]
-else:
-    CORS_ALLOWED_ORIGIN_REGEXES = [
-        r"^https://.*\.gitpod\.io$",
-    ]
-
 ROOT_URLCONF = 'productivity_app.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # No need to serve frontend templates from backend
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -117,7 +115,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'productivity_app.wsgi.application'
-ASGI_APPLICATION = 'productivity_app.asgi.application'  # Include if using ASGI
+ASGI_APPLICATION = 'productivity_app.asgi.application'
 
 database_url = os.environ.get("DATABASE_URL")
 

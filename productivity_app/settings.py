@@ -11,7 +11,7 @@ if os.path.isfile('env.py'):
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = 'DEV' in os.environ
+DEBUG = 'True'
 
 ALLOWED_HOSTS = [
     'localhost',

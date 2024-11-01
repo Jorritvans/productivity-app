@@ -109,13 +109,8 @@ def profile_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def search_users(request):
-    query = request.query_params.get('q', '')
-    exclude_user_id = request.query_params.get('exclude_user')
-    
-    users = User.objects.filter(username__icontains=query)
-    if exclude_user_id:
-        users = users.exclude(id=exclude_user_id)
-        
+    query = request.query_params.get('q', '')  # Get the 'q' parameter from the query string
+    users = User.objects.filter(username__icontains=query)  # Filter users by username containing the query string
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
 
@@ -163,23 +158,16 @@ def following_list(request):
     serializer = UserSerializer(followed_users, many=True)
     return Response(serializer.data)
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_tasks(request, owner_id):
     try:
-        owner = User.objects.get(id=owner_id)
-        tasks = Task.objects.filter(owner=owner)
+        tasks = Task.objects.filter(owner_id=owner_id)
+        is_following = Following.objects.filter(follower=request.user, followed_id=owner_id).exists()
         serializer = TaskSerializer(tasks, many=True)
-        if not tasks.exists():
-            return Response({"message": "No tasks found for this user."}, status=status.HTTP_404_NOT_FOUND)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({"tasks": serializer.data, "is_following": is_following}, status=status.HTTP_200_OK)
     except User.DoesNotExist:
-        logger.error(f"User with ID {owner_id} does not exist.")
-        return JsonResponse({"error": "User not found."}, status=404)
-    except Exception as e:
-        logger.error(f"An error occurred while fetching tasks for user {owner_id}: {e}")
-        return JsonResponse({"error": "An error occurred while fetching tasks."}, status=500)
+        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     
 @api_view(['GET'])

@@ -109,10 +109,14 @@ def profile_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def search_users(request):
-    query = request.query_params.get('q', '')  # Get the 'q' parameter from the query string
-    users = User.objects.filter(username__icontains=query)  # Filter users by username containing the query string
+    query = request.query_params.get('q', '')  # Get the search query
+    current_user = request.user  # Get the currently logged-in user
+
+    # Filter users by the query, excluding the current user
+    users = User.objects.filter(username__icontains=query).exclude(id=current_user.id)
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

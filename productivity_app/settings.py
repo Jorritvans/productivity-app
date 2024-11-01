@@ -18,8 +18,11 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
     '8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
-    os.environ.get('ALLOWED_HOST'),
 ]
+
+allowed_host = os.environ.get('ALLOWED_HOST')
+if allowed_host:
+    ALLOWED_HOSTS.append(allowed_host)
 
 # CORS Settings
 if "CLIENT_ORIGIN" in os.environ:
@@ -61,7 +64,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
     'https://8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
     'http://localhost:3000',
-    'https://productivity-app-jorrit-49d8d1e48534.herokuapp.com',
+    os.environ.get('ALLOWED_HOST'),
 ]
 
 CSRF_COOKIE_NAME = 'csrftoken'
@@ -177,13 +180,3 @@ SIMPLE_JWT = {
     'JWT_AUTH_REFRESH_COOKIE': 'my-refresh-token',
     'JWT_AUTH_SAMESITE': 'None'
 }
-
-print("---- DEBUGGING HEROKU SETTINGS ----")
-print("DEBUG:", DEBUG)
-print("SECRET_KEY set:", bool(SECRET_KEY))
-print("ALLOWED_HOSTS:", ALLOWED_HOSTS)
-print("CORS_ALLOWED_ORIGINS:", CORS_ALLOWED_ORIGINS)
-print("CSRF_TRUSTED_ORIGINS:", CSRF_TRUSTED_ORIGINS)
-print("DATABASE_URL:", database_url)
-print("DATABASES Configured:", DATABASES)
-print("---- END DEBUGGING HEROKU SETTINGS ----")

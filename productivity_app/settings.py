@@ -65,8 +65,8 @@ CSRF_TRUSTED_ORIGINS = [
 
 allowed_host = os.environ.get('ALLOWED_HOST')
 if allowed_host:
-    CSRF_TRUSTED_ORIGINS.append(allowed_host)
-
+    ALLOWED_HOSTS.append(allowed_host)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{allowed_host}")
 
 CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'

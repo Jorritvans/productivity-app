@@ -1,6 +1,5 @@
-# tasks/views.py
 from rest_framework import viewsets, permissions, filters
-from .models import Task, Comment  # Removed Notification import
+from .models import Task, Comment
 from .serializers import TaskSerializer, CommentSerializer
 from rest_framework.response import Response
 from rest_framework import status
@@ -62,7 +61,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsAuthorOrReadOnly]
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)  # Removed notification logic
+        serializer.save(author=self.request.user)
 
     def get_queryset(self):
         task_id = self.request.query_params.get('task', None)

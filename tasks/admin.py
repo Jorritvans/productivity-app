@@ -3,9 +3,9 @@ from .models import Task, Comment
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ['title', 'due_date', 'priority', 'category', 'owner']  # Display 'owner'
-    list_filter = ['priority', 'category', 'state', 'owner']  # Add 'owner' to filters
-    search_fields = ['title', 'description', 'owner__username']  # Allow search by owner's username
+    list_display = ['title', 'due_date', 'priority', 'category', 'owner']
+    list_filter = ['priority', 'category', 'state', 'owner']
+    search_fields = ['title', 'description', 'owner__username']
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):

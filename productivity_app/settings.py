@@ -1,5 +1,3 @@
-# productivity_app/settings.py
-
 from pathlib import Path
 import os
 import dj_database_url
@@ -11,7 +9,7 @@ if os.path.isfile('env.py'):
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = 'True'
+DEBUG = 'False'
 
 ALLOWED_HOSTS = [
     'localhost',

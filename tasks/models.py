@@ -2,7 +2,6 @@ from django.db import models, IntegrityError
 from django.contrib.auth.models import User
 import logging 
 
-# Set up a logger
 logger = logging.getLogger(__name__)
 
 class Task(models.Model):

@@ -1,16 +1,15 @@
-# serializers.py
 from rest_framework import serializers
-from .models import Task, Comment  # Removed Notification import
+from .models import Task, Comment
 from django.contrib.auth.models import User
 
 class TaskSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
-    owner_id = serializers.ReadOnlyField(source='owner.id')  # Add owner_id here
+    owner_id = serializers.ReadOnlyField(source='owner.id')
     comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'state', 'due_date', 'priority', 'category', 'owner', 'owner_id', 'comments']  # Include 'owner_id' in fields
+        fields = ['id', 'title', 'description', 'state', 'due_date', 'priority', 'category', 'owner', 'owner_id', 'comments']
 
     def get_comments(self, obj):
         comments = obj.comments.all()

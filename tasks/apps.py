@@ -1,5 +1,5 @@
 from django.apps import AppConfig
-from django.utils.module_loading import import_string  # Add this import
+from django.utils.module_loading import import_string
 from django.db import connection
 
 class TasksConfig(AppConfig):

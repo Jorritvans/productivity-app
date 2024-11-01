@@ -61,7 +61,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
     'https://8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
     'http://localhost:3000',
-    os.environ.get('ALLOWED_HOST'),
+    'https://productivity-app-jorrit-49d8d1e48534.herokuapp.com',
 ]
 
 CSRF_COOKIE_NAME = 'csrftoken'

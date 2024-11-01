@@ -118,17 +118,6 @@ def search_users(request):
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def search_users(request):
-    query = request.query_params.get('q', '')  # Get the 'q' parameter from the query string
-    current_user = request.user  # Get the current logged-in user
-
-    # Filter users by username containing the query string, excluding the current user
-    users = User.objects.filter(username__icontains=query).exclude(id=current_user.id)
-    serializer = UserSerializer(users, many=True)
-    return Response(serializer.data)
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def follow_user(request, user_id):
@@ -179,11 +168,11 @@ def following_list(request):
 def user_tasks(request, owner_id):
     owner = get_object_or_404(User, id=owner_id)
     tasks = Task.objects.filter(owner=owner)
-    serializer = TaskSerializer(tasks, many=True)
-    
+
     if not tasks.exists():
         return Response({"message": "No tasks found for this user."}, status=status.HTTP_404_NOT_FOUND)
 
+    serializer = TaskSerializer(tasks, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
     

@@ -18,11 +18,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
     '8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
+    os.environ.get('ALLOWED_HOST'),
 ]
-
-allowed_host = os.environ.get('ALLOWED_HOST')
-if allowed_host:
-    ALLOWED_HOSTS.append(allowed_host)
 
 # CORS Settings
 if "CLIENT_ORIGIN" in os.environ:
@@ -64,9 +61,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://8080-jorritvans-productivity-zqeljsth1ag.ws.codeinstitute-ide.net',
     'https://8000-jorritvans-productivity-9zhpc5cokwg.ws.codeinstitute-ide.net',
     'http://localhost:3000',
+    'https://productivity-app-jorrit-49d8d1e48534.herokuapp.com',
 ]
-if allowed_host:
-    CSRF_TRUSTED_ORIGINS.append(f"https://{allowed_host}")
 
 CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'

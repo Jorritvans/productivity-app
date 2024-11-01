@@ -180,6 +180,10 @@ def user_tasks(request, owner_id):
     owner = get_object_or_404(User, id=owner_id)
     tasks = Task.objects.filter(owner=owner)
     serializer = TaskSerializer(tasks, many=True)
+    
+    if not tasks.exists():
+        return Response({"message": "No tasks found for this user."}, status=status.HTTP_404_NOT_FOUND)
+
     return Response(serializer.data, status=status.HTTP_200_OK)
 
     

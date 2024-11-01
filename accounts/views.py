@@ -15,6 +15,7 @@ from datetime import datetime
 from .models import Following
 from .serializers import FollowingSerializer
 from django.urls import reverse
+from django.shortcuts import get_object_or_404
 
 # Simple API Root
 @api_view(['GET'])
@@ -166,14 +167,19 @@ def following_list(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_tasks(request, owner_id):
-    owner = get_object_or_404(User, id=owner_id)
-    tasks = Task.objects.filter(owner=owner)
-
-    if not tasks.exists():
-        return Response({"message": "No tasks found for this user."}, status=status.HTTP_404_NOT_FOUND)
-
-    serializer = TaskSerializer(tasks, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    try:
+        owner = User.objects.get(id=owner_id)
+        tasks = Task.objects.filter(owner=owner)
+        serializer = TaskSerializer(tasks, many=True)
+        if not tasks.exists():
+            return Response({"message": "No tasks found for this user."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        logger.error(f"User with ID {owner_id} does not exist.")
+        return JsonResponse({"error": "User not found."}, status=404)
+    except Exception as e:
+        logger.error(f"An error occurred while fetching tasks for user {owner_id}: {e}")
+        return JsonResponse({"error": "An error occurred while fetching tasks."}, status=500)
 
     
 @api_view(['GET'])

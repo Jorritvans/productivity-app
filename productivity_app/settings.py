@@ -177,3 +177,13 @@ SIMPLE_JWT = {
     'JWT_AUTH_REFRESH_COOKIE': 'my-refresh-token',
     'JWT_AUTH_SAMESITE': 'None'
 }
+
+print("---- DEBUGGING HEROKU SETTINGS ----")
+print("DEBUG:", DEBUG)
+print("SECRET_KEY set:", bool(SECRET_KEY))
+print("ALLOWED_HOSTS:", ALLOWED_HOSTS)
+print("CORS_ALLOWED_ORIGINS:", CORS_ALLOWED_ORIGINS)
+print("CSRF_TRUSTED_ORIGINS:", CSRF_TRUSTED_ORIGINS)
+print("DATABASE_URL:", database_url)
+print("DATABASES Configured:", DATABASES)
+print("---- END DEBUGGING HEROKU SETTINGS ----")

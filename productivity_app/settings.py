@@ -9,7 +9,7 @@ if os.path.isfile('env.py'):
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = 'False'
+DEBUG = False
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -145,7 +145,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Cloudinary Configuration
 CLOUDINARY_STORAGE = {

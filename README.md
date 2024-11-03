@@ -1,131 +1,142 @@
-![CI logo](https://codeinstitute.s3.amazonaws.com/fullstack/ci_logo_small.png)
+# Productivity App - Backend
 
-Welcome Jorrit Vanstraelen,
+The backend of Productivity App is a Django Rest Framework (DRF) API designed to support a comprehensive task management application. This API manages user authentication, task creation, task commenting, and user interactions like following/unfollowing other users.
 
-This is the Code Institute student template for Gitpod. We have preinstalled all of the tools you need to get started. It's perfectly ok to use this template as the basis for your project submissions.
+### Portfolio Project - Django REST Framework Application
 
-You can safely delete this README.md file or change it for your own project. Please do read it at least once, though! It contains some important information about Gitpod and the extensions we use. Some of this information has been updated since the video content was created. The last update to this file was: **June 18, 2024**
+The purpose of this project was to create a secure, RESTful API using Django that provides CRUD operations for tasks, user authentication, and follow/unfollow functionalities for a task management platform.
 
-## Gitpod Reminders
+## Link to Backend Application
 
-To run a frontend (HTML, CSS, Javascript only) application in Gitpod, in the terminal, type:
+The live backend API is hosted on Heroku:
+[Productivity App Backend - Heroku](https://productivity-app-jorrit-49d8d1e48534.herokuapp.com)
 
-`python3 -m http.server`
+## API Documentation
 
-A blue button should appear to click: _Make Public_,
+The Productivity App API provides endpoints to manage tasks, comments, user profiles, and user relationships. Below are the key endpoints:
 
-Another blue button should appear to click: _Open Browser_.
+- **Authentication Endpoints**:
+  - `/api/auth/register/`: Register a new user
+  - `/api/auth/login/`: User login to obtain access and refresh tokens
+  - `/api/auth/logout/`: Log out and invalidate tokens
+  - `/api/token/refresh/`: Refresh access token using a valid refresh token
 
-To run a backend Python file, type `python3 app.py` if your Python file is named `app.py`, of course.
+- **Task Endpoints**:
+  - `GET /api/tasks/`: Retrieve a list of tasks
+  - `POST /api/tasks/`: Create a new task
+  - `PUT /api/tasks/<task_id>/`: Update a specific task
+  - `DELETE /api/tasks/<task_id>/`: Delete a specific task
 
-A blue button should appear to click: _Make Public_,
+- **Comment Endpoints**:
+  - `GET /api/comments/?task=<task_id>`: Retrieve comments for a specific task
+  - `POST /api/comments/`: Add a comment to a task
+  - `PATCH /api/comments/<comment_id>/`: Update a comment
+  - `DELETE /api/comments/<comment_id>/`: Delete a comment
 
-Another blue button should appear to click: _Open Browser_.
+- **User Follow/Unfollow Endpoints**:
+  - `POST /api/accounts/follow/<user_id>/`: Follow a user
+  - `POST /api/accounts/unfollow/<user_id>/`: Unfollow a user
+  - `GET /api/accounts/following/`: List users the current user is following
 
-By Default, Gitpod gives you superuser security privileges. Therefore, you do not need to use the `sudo` (superuser do) command in the bash terminal in any of the lessons.
+## Features
 
-To log into the Heroku toolbelt CLI:
+The backend offers comprehensive features to manage tasks and user interactions:
 
-1. Log in to your Heroku account and go to *Account Settings* in the menu under your avatar.
-2. Scroll down to the *API Key* and click *Reveal*
-3. Copy the key
-4. In Gitpod, from the terminal, run `heroku_config`
-5. Paste in your API key when asked
+- **JWT Authentication**: User authentication is managed via JSON Web Tokens, ensuring secure access and token refresh functionality.
+- **CRUD Operations for Tasks**: Users can create, read, update, and delete tasks with permissions applied to restrict modifications to task owners.
+- **Follow/Unfollow Functionality**: Users can follow or unfollow each other to view and engage with tasks from followed users.
+- **Commenting System**: Users can comment on tasks, with functionality for editing and deleting their own comments.
+- **Secure Access Control**: Permissions ensure users can only edit and delete their own tasks and comments.
 
-You can now use the `heroku` CLI program - try running `heroku apps` to confirm it works. This API key is unique and private to you, so do not share it. If you accidentally make it public, you can create a new one with _Regenerate API Key_.
+## Technologies Used
 
-### Connecting your Mongo database
+- **Programming Language**:
+  - Python
+- **Framework**:
+  - Django
+  - Django Rest Framework (DRF)
+- **Database**:
+  - PostgreSQL for production
+  - SQLite for local development
+- **Authentication**:
+  - JWT (JSON Web Tokens) for secure access control
+- **Deployment**:
+  - Heroku for live deployment
+- **Media Storage**:
+  - Cloudinary for storing media files, ensuring scalable media management
+- **Version Control**:
+  - Git and GitHub for project tracking and version control
 
-- **Connect to Mongo CLI on a IDE**
-- navigate to your MongoDB Clusters Sandbox
-- click **"Connect"** button
-- select **"Connect with the MongoDB shell"**
-- select **"I have the mongo shell installed"**
-- choose **mongosh (2.0 or later)** for : **"Select your mongo shell version"**
-- choose option: **"Run your connection string in your command line"**
-- in the terminal, paste the copied code `mongo "mongodb+srv://<CLUSTER-NAME>.mongodb.net/<DBname>" --apiVersion 1 --username <USERNAME>`
-  - replace all `<angle-bracket>` keys with your own data
-- enter password _(will not echo **\*\*\*\*** on screen)_
+## Development & Structure
 
-------
+The backend is structured as a Django project with multiple Django apps that manage specific aspects of the API. Key apps include:
 
-## Release History
+- **Accounts**: Handles user registration, profile management, and follow/unfollow functionality.
+- **Tasks**: Manages all CRUD operations for tasks.
+- **Comments**: Manages CRUD operations for task comments.
 
-We continually tweak and adjust this template to help give you the best experience. Here is the version history:
+The application follows Django’s Model-View-Template (MVT) architecture, with Django Rest Framework (DRF) used to create RESTful views. Serializers in DRF ensure that data from models is validated and converted to JSON format for easy consumption by the frontend.
 
-**June 18, 2024,** Add Mongo back into template
+## Data Models
 
-**June 14, 2024,** Temporarily remove Mongo until the key issue is resolved
+- **User**: Custom user model linked to tasks and comments. Includes followers and following relationships for user engagement.
+- **Task**: Stores task details, including title, description, priority, due date, category, and state.
+- **Comment**: Each comment is linked to a task and a user, allowing users to interact on specific tasks.
 
-**May 28 2024:** Fix Mongo and Links installs
+## Security Features
 
-**April 26 2024:** Update node version to 16
+- **Environment Variables**: Sensitive data, such as secret keys and database credentials, are securely managed with environment variables and are not committed to the codebase.
+- **Token Expiration & Refresh**: Access tokens expire and are refreshed automatically, enhancing security for user sessions.
+- **Permissions**: DRF permissions are used to restrict access, ensuring only authenticated users can create tasks and comments, and users can only modify their own content.
 
-**September 20 2023:** Update Python version to 3.9.17.
+## Bugs
 
-**September 1 2021:** Remove `PGHOSTADDR` environment variable.
+- **No known bugs** at the time of deployment.
 
-**July 19 2021:** Remove `font_fix` script now that the terminal font issue is fixed.
+## Testing
 
-**July 2 2021:** Remove extensions that are not available in Open VSX.
+### Manual Testing
 
-**June 30 2021:** Combined the P4 and P5 templates into one file, added the uptime script. See the FAQ at the end of this file.
+Comprehensive manual testing was performed on API endpoints to verify correct functionality for all CRUD operations, authentication flows, and user interactions.
 
-**June 10 2021:** Added: `font_fix` script and alias to fix the Terminal font issue
+| Endpoint                      | Method | Description                                      | Status |
+|-------------------------------|--------|--------------------------------------------------|--------|
+| `/api/auth/register/`         | POST   | Registers a new user                             | Pass   |
+| `/api/auth/login/`            | POST   | Logs in a user and returns tokens                | Pass   |
+| `/api/tasks/`                 | GET    | Retrieves all tasks for the authenticated user   | Pass   |
+| `/api/tasks/`                 | POST   | Creates a new task                               | Pass   |
+| `/api/tasks/<task_id>/`       | PUT    | Updates a specific task                          | Pass   |
+| `/api/tasks/<task_id>/`       | DELETE | Deletes a specific task                          | Pass   |
+| `/api/comments/`              | POST   | Creates a new comment on a task                  | Pass   |
+| `/api/accounts/follow/<user_id>/` | POST | Follow a user                                   | Pass   |
+| `/api/accounts/unfollow/<user_id>/` | POST | Unfollow a user                               | Pass   |
 
-**May 10 2021:** Added `heroku_config` script to allow Heroku API key to be stored as an environment variable.
+### Validation
 
-**April 7 2021:** Upgraded the template for VS Code instead of Theia.
+- **PEP8 Compliance**: All Python code was checked with PEP8 to ensure consistent formatting and adherence to style guidelines.
+- **Testing Tools**: Postman was used to manually test API endpoints for expected responses and error handling.
 
-**October 21 2020:** Versions of the HTMLHint, Prettier, Bootstrap4 CDN and Auto Close extensions updated. The Python extension needs to stay the same version for now.
+## Deployment
 
-**October 08 2020:** Additional large Gitpod files (`core.mongo*` and `core.python*`) are now hidden in the Explorer, and have been added to the `.gitignore` by default.
+This project was deployed using Heroku with PostgreSQL as the database.
 
-**September 22 2020:** Gitpod occasionally creates large `core.Microsoft` files. These are now hidden in the Explorer. A `.gitignore` file has been created to make sure these files will not be committed, along with other common files.
+### Deployment Steps
+1. Clone this repository.
+2. Set up a new Heroku app and configure environment variables for secure credentials.
+3. Configure PostgreSQL on Heroku.
+4. Set the buildpacks to Python in Heroku.
+5. Deploy the application.
 
-**April 16 2020:** The template now automatically installs MySQL instead of relying on the Gitpod MySQL image. The message about a Python linter not being installed has been dealt with, and the set-up files are now hidden in the Gitpod file explorer.
+## Credits
 
-**April 13 2020:** Added the _Prettier_ code beautifier extension instead of the code formatter built-in to Gitpod.
+- **Development**: Built by [Jorrit Vanstraelen]
+- **Documentation**: Code Institute resources and Django documentation for guidance.
+- **Inspiration**: This project was inspired by various Django tutorials and documentation.
 
-**February 2020:** The initialisation files now _do not_ auto-delete. They will remain in your project. You can safely ignore them. They just make sure that your workspace is configured correctly each time you open it. It will also prevent the Gitpod configuration popup from appearing.
+## Advice and Experience
 
-**December 2019:** Added Eventyret's Bootstrap 4 extension. Type `!bscdn` in a HTML file to add the Bootstrap boilerplate. Check out the <a href="https://github.com/Eventyret/vscode-bcdn" target="_blank">README.md file at the official repo</a> for more options.
+Creating the backend for this productivity application required significant planning around data structures, permissions, and security. The task and comment models were designed to be scalable, and JWT was implemented for secure user authentication.
 
-------
+## Acknowledgements
 
-## FAQ about the uptime script
-
-**Why have you added this script?**
-
-It will help us to calculate how many running workspaces there are at any one time, which greatly helps us with cost and capacity planning. It will help us decide on the future direction of our cloud-based IDE strategy.
-
-**How will this affect me?**
-
-For everyday usage of Gitpod, it doesn’t have any effect at all. The script only captures the following data:
-
-- An ID that is randomly generated each time the workspace is started.
-- The current date and time
-- The workspace status of “started” or “running”, which is sent every 5 minutes.
-
-It is not possible for us or anyone else to trace the random ID back to an individual, and no personal data is being captured. It will not slow down the workspace or affect your work.
-
-**So….?**
-
-We want to tell you this so that we are being completely transparent about the data we collect and what we do with it.
-
-**Can I opt out?**
-
-Yes, you can. Since no personally identifiable information is being captured, we'd appreciate it if you let the script run; however if you are unhappy with the idea, simply run the following commands from the terminal window after creating the workspace, and this will remove the uptime script:
-
-```
-pkill uptime.sh
-rm .vscode/uptime.sh
-```
-
-**Anything more?**
-
-Yes! We'd strongly encourage you to look at the source code of the `uptime.sh` file so that you know what it's doing. As future software developers, it will be great practice to see how these shell scripts work.
-
----
-
-Happy coding!
+Special thanks to my mentor for providing valuable feedback throughout the development of this project.

@@ -115,8 +115,8 @@ Comprehensive manual testing was performed on API endpoints to verify correct fu
 ### Validation
 
 - **PEP8 Compliance**: All Python code was checked with PEP8 to ensure consistent formatting and adherence to style guidelines.
-  ![![Screenshot 2024-11-04 165443](https://github.com/user-attachments/assets/9c572807-dd34-4006-849b-fdcaae612119)
-]
+  ![Screenshot 2024-11-04 165443](https://github.com/user-attachments/assets/9c572807-dd34-4006-849b-fdcaae612119)
+
 - **Testing Tools**: Postman was used to manually test API endpoints for expected responses and error handling.
 
 ## Deployment

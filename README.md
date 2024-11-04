@@ -122,7 +122,7 @@ This project was deployed using Heroku with PostgreSQL as the database.
 
 ### Deployment Steps
 
-1. Clone the repository from [GitHub - Jorritvans/productivity-app](https://github.com/Jorritvans/productivity-app).
+1. Clone the repository from [GitHub - Jorritvans/productivity-app](https://github.com/users/Jorritvans/projects/3).
 2. Navigate to the project directory.
 3. Create a new Heroku app.
 4. Set up PostgreSQL as the database on Heroku.

@@ -8,6 +8,7 @@ from rest_framework import status, generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .serializers import UserSerializer
 from tasks.models import Task
 from tasks.serializers import TaskSerializer
@@ -16,6 +17,7 @@ from .models import Following
 from .serializers import FollowingSerializer
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
+
 
 # Simple API Root
 @api_view(['GET'])
@@ -28,6 +30,7 @@ def api_root(request):
         "refresh_token": "/api/token/refresh/",
     })
 
+
 # User Registration View
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -39,14 +42,23 @@ def register(request):
         password = request.data.get('password')
 
         if User.objects.filter(username=username).exists():
-            return Response({"error": "Username already in use"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Username already in use"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         if User.objects.filter(email=email).exists():
-            return Response({"error": "Email already in use"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Email already in use"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             validate_password(password)
         except ValidationError as e:
-            return Response({"error": e.messages}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": e.messages},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             user = serializer.save()
@@ -59,9 +71,13 @@ def register(request):
                 "username": user.username,
             }, status=status.HTTP_201_CREATED)
         except IntegrityError:
-            return Response({"error": "Integrity error occurred"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Integrity error occurred"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # User List View
 class UserListView(generics.ListAPIView):
@@ -69,8 +85,6 @@ class UserListView(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
-# Custom TokenObtainPairSerializer and TokenObtainPairView
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -86,8 +100,10 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['username'] = self.user.username
         return data
 
+
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -106,6 +122,7 @@ def profile_view(request):
         "tasks": task_data,
     })
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def search_users(request):
@@ -113,7 +130,9 @@ def search_users(request):
     current_user = request.user  # Get the currently logged-in user
 
     # Filter users by the query, excluding the current user
-    users = User.objects.filter(username__icontains=query).exclude(id=current_user.id)
+    users = User.objects.filter(username__icontains=query).exclude(
+        id=current_user.id
+    )
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
 
@@ -124,35 +143,67 @@ def follow_user(request, user_id):
     try:
         followed_user = User.objects.get(id=user_id)
         if followed_user == request.user:
-            return Response({'error': 'You cannot follow yourself.'}, status=status.HTTP_400_BAD_REQUEST)
-        following_relation, created = Following.objects.get_or_create(follower=request.user, followed=followed_user)
+            return Response(
+                {'error': 'You cannot follow yourself.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        following_relation, created = Following.objects.get_or_create(
+            follower=request.user,
+            followed=followed_user
+        )
         if not created:
-            return Response({'error': 'You are already following this user.'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'message': f'You are now following {followed_user.username}.'}, status=status.HTTP_201_CREATED)
+            return Response(
+                {'error': 'You are already following this user.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(
+            {'message': f'You are now following {followed_user.username}.'},
+            status=status.HTTP_201_CREATED
+        )
     except User.DoesNotExist:
-        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {'error': 'User not found.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def unfollow_user(request, user_id):
     try:
         followed_user = User.objects.get(id=user_id)
-        following_relation = Following.objects.filter(follower=request.user, followed=followed_user)
+        following_relation = Following.objects.filter(
+            follower=request.user,
+            followed=followed_user
+        )
         if following_relation.exists():
             following_relation.delete()
-            return Response({'message': f'You have unfollowed {followed_user.username}.'}, status=status.HTTP_200_OK)
+            return Response(
+                {'message': f'You have unfollowed {followed_user.username}.'},
+                status=status.HTTP_200_OK
+            )
         else:
-            return Response({'error': 'You are not following this user.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'You are not following this user.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
     except User.DoesNotExist:
-        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {'error': 'User not found.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def followed_tasks(request):
-    followed_users = Following.objects.filter(follower=request.user).values_list('followed', flat=True)
+    followed_users = Following.objects.filter(
+        follower=request.user
+    ).values_list('followed', flat=True)
     tasks = Task.objects.filter(owner__id__in=followed_users)
     serializer = TaskSerializer(tasks, many=True)
     return Response(serializer.data)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -162,18 +213,28 @@ def following_list(request):
     serializer = UserSerializer(followed_users, many=True)
     return Response(serializer.data)
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_tasks(request, owner_id):
     try:
         tasks = Task.objects.filter(owner_id=owner_id)
-        is_following = Following.objects.filter(follower=request.user, followed_id=owner_id).exists()
+        is_following = Following.objects.filter(
+            follower=request.user,
+            followed_id=owner_id
+        ).exists()
         serializer = TaskSerializer(tasks, many=True)
-        return Response({"tasks": serializer.data, "is_following": is_following}, status=status.HTTP_200_OK)
+        return Response(
+            {"tasks": serializer.data, "is_following": is_following},
+            status=status.HTTP_200_OK
+        )
     except User.DoesNotExist:
-        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {'error': 'User not found.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
-    
+
 @api_view(['GET'])
 def accounts_root(request):
     return Response({

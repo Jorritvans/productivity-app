@@ -87,6 +87,7 @@ The application follows Django Rest Framework (DRF) architecture, with serialize
 
 - **Environment Variables**: Sensitive data, such as secret keys and database credentials, are securely managed with environment variables and are not committed to the codebase.
 - **Token Expiration & Refresh**: Access tokens expire and are refreshed automatically, enhancing security for user sessions.
+- **Session Expiration Logic**: When tokens expire and cannot be refreshed (e.g., due to an expired refresh token), the backend dispatches a `sessionExpired` event to the frontend. This informs the user that their session has expired, allowing them to re-authenticate without confusion.
 - **Permissions**: DRF permissions are used to restrict access, ensuring only authenticated users can create tasks and comments, and users can only modify their own content.
 
 ## Bugs
